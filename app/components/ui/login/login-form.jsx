@@ -1,3 +1,7 @@
+"use client";
+
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { cn } from "../../../lib/utils";
 import { Button } from "../button";
 import {
@@ -9,8 +13,26 @@ import {
 } from "../card";
 import { Input } from "../input";
 import { Label } from "../label";
+import { loginSchema } from "../../../lib/schemas";
 
 export function LoginForm({ className, ...props }) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+  });
+
+  const onSubmit = async (data) => {
+    try {
+      // Handle login logic here
+      console.log(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -21,7 +43,7 @@ export function LoginForm({ className, ...props }) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
+          <form onSubmit={handleSubmit(onSubmit)}>
             <div className="grid gap-6">
               <div className="flex flex-col gap-4">
                 <Button variant="outline" className="w-full">
@@ -43,26 +65,44 @@ export function LoginForm({ className, ...props }) {
                 <div className="grid gap-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
+                    {...register("email")}
                     id="email"
                     type="email"
                     placeholder="m@example.com"
-                    required
                   />
+                  {errors.email && (
+                    <p className="text-sm text-destructive">
+                      {errors.email.message}
+                    </p>
+                  )}
                 </div>
                 <div className="grid gap-2">
-                  {/* <div className="flex items-center">
+                  <div className="flex items-center">
                     <Label htmlFor="password">Password</Label>
                     <a
-                      href="#"
+                      href="/auth/recovery"
                       className="ml-auto text-sm underline-offset-4 hover:underline"
                     >
                       Forgot your password?
                     </a>
-                  </div> */}
-                  <Input id="password" type="password" required />
+                  </div>
+                  <Input
+                    {...register("password")}
+                    id="password"
+                    type="password"
+                  />
+                  {errors.password && (
+                    <p className="text-sm text-destructive">
+                      {errors.password.message}
+                    </p>
+                  )}
                 </div>
-                <Button type="submit" className="w-full">
-                  Login
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Logging in..." : "Login"}
                 </Button>
               </div>
               <div className="text-center text-sm">
@@ -74,20 +114,11 @@ export function LoginForm({ className, ...props }) {
                   Sign up
                 </a>
               </div>
-              <div className="text-center text-sm">
-                Forgot your password?{" "}
-                <a
-                  href="/auth/recovery"
-                  className="underline underline-offset-4"
-                >
-                  Reset password
-                </a>
-              </div>
             </div>
           </form>
         </CardContent>
       </Card>
-      <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-primary  ">
+      <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-primary">
         By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
         and <a href="#">Privacy Policy</a>.
       </div>

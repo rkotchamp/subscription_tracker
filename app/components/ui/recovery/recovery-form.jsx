@@ -1,3 +1,6 @@
+"use client";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { cn } from "../../../lib/utils";
 import { Button } from "../button";
 import {
@@ -9,8 +12,26 @@ import {
 } from "../card";
 import { Input } from "../input";
 import { Label } from "../label";
+import { recoverySchema } from "../../../lib/schemas";
 
 export function RecoveryForm({ className, ...props }) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(recoverySchema),
+  });
+
+  const onSubmit = async (data) => {
+    try {
+      // Handle password recovery logic here
+      console.log(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -22,19 +43,24 @@ export function RecoveryForm({ className, ...props }) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
+          <form onSubmit={handleSubmit(onSubmit)}>
             <div className="grid gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
+                  {...register("email")}
                   id="email"
                   type="email"
                   placeholder="m@example.com"
-                  required
                 />
+                {errors.email && (
+                  <p className="text-sm text-destructive">
+                    {errors.email.message}
+                  </p>
+                )}
               </div>
-              <Button type="submit" className="w-full">
-                Send Reset Link
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Sending..." : "Send Reset Link"}
               </Button>
               <div className="text-center text-sm">
                 Remember your password?{" "}
