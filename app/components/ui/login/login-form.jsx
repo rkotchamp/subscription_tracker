@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { cn } from "../../../lib/utils";
+import { cn } from "../../../lib/utils/utils";
 import { Button } from "../button";
 import {
   Card,
@@ -16,6 +18,10 @@ import { Label } from "../label";
 import { loginSchema } from "../../../lib/schemas";
 
 export function LoginForm({ className, ...props }) {
+  const router = useRouter();
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -26,10 +32,30 @@ export function LoginForm({ className, ...props }) {
 
   const onSubmit = async (data) => {
     try {
-      // Handle login logic here
-      console.log(data);
+      setError("");
+      setIsLoading(true);
+
+      const response = await fetch("/api/login_auth", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Something went wrong");
+      }
+
+      // Redirect to dashboard on successful login
+      router.push("/dashboard");
     } catch (error) {
       console.error(error);
+      setError(error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -44,6 +70,11 @@ export function LoginForm({ className, ...props }) {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)}>
+            {error && (
+              <div className="mb-4 p-3 text-sm text-destructive bg-destructive/10 rounded-md">
+                {error}
+              </div>
+            )}
             <div className="grid gap-6">
               <div className="flex flex-col gap-4">
                 <Button variant="outline" className="w-full">

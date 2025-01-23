@@ -1,22 +1,26 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { cn } from "../../../lib/utils/utils";
-import { Button } from "../button";
+import { cn } from "../../../../lib/utils/utils";
+import { Button } from "../../button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../card";
-import { Input } from "../input";
-import { Label } from "../label";
-import { recoverySchema } from "../../../lib/schemas";
+} from "../../card";
+import { Input } from "../../input";
+import { Label } from "../../label";
+import { resetPasswordSchema } from "../../../../lib/schemas";
 
-export function RecoveryForm({ className, ...props }) {
+export function ResetPasswordForm({ className, ...props }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
@@ -24,19 +28,23 @@ export function RecoveryForm({ className, ...props }) {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
+    watch,
   } = useForm({
-    resolver: zodResolver(recoverySchema),
+    resolver: zodResolver(resetPasswordSchema),
   });
 
   const onSubmit = async (data) => {
     try {
       setError("");
-      const response = await fetch("/api/recovery", {
+      const response = await fetch("/api/recovery/reset", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          password: data.password,
+          token,
+        }),
       });
 
       const result = await response.json();
@@ -46,6 +54,9 @@ export function RecoveryForm({ className, ...props }) {
       }
 
       setSuccess(true);
+      setTimeout(() => {
+        router.push("/auth/login");
+      }, 3000);
     } catch (error) {
       console.error(error);
       setError(error.message);
@@ -58,17 +69,10 @@ export function RecoveryForm({ className, ...props }) {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center space-y-4">
-              <h3 className="text-lg font-medium">Check your email</h3>
+              <h3 className="text-lg font-medium">Password Reset Successful</h3>
               <p className="text-sm text-muted-foreground">
-                If an account exists with that email, we've sent password reset
-                instructions.
+                Your password has been reset. Redirecting to login...
               </p>
-              <a
-                href="/auth/login"
-                className="text-sm underline underline-offset-4"
-              >
-                Back to login
-              </a>
             </div>
           </CardContent>
         </Card>
@@ -80,11 +84,8 @@ export function RecoveryForm({ className, ...props }) {
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Reset your password</CardTitle>
-          <CardDescription>
-            Enter your email address and we'll send you a link to reset your
-            password
-          </CardDescription>
+          <CardTitle className="text-xl">Reset Password</CardTitle>
+          <CardDescription>Enter your new password below</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)}>
@@ -95,36 +96,38 @@ export function RecoveryForm({ className, ...props }) {
             )}
             <div className="grid gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="password">New Password</Label>
                 <Input
-                  {...register("email")}
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
+                  {...register("password")}
+                  id="password"
+                  type="password"
                 />
-                {errors.email && (
+                {errors.password && (
                   <p className="text-sm text-destructive">
-                    {errors.email.message}
+                    {errors.password.message}
+                  </p>
+                )}
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  {...register("confirmPassword")}
+                  id="confirmPassword"
+                  type="password"
+                />
+                {errors.confirmPassword && (
+                  <p className="text-sm text-destructive">
+                    {errors.confirmPassword.message}
                   </p>
                 )}
               </div>
               <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? "Sending..." : "Send Reset Link"}
+                {isSubmitting ? "Resetting..." : "Reset Password"}
               </Button>
-              <div className="text-center text-sm">
-                Remember your password?{" "}
-                <a href="/auth/login" className="underline underline-offset-4">
-                  Back to login
-                </a>
-              </div>
             </div>
           </form>
         </CardContent>
       </Card>
-      <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-primary">
-        If you're having trouble, please contact{" "}
-        <a href="#">our support team</a> for assistance.
-      </div>
     </div>
   );
 }

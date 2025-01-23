@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { cn } from "../../../lib/utils";
+import { cn } from "../../../lib/utils/utils";
 import { Button } from "../button";
 import {
   Card,
@@ -16,6 +18,9 @@ import { Label } from "../label";
 import { signUpSchema } from "../../../lib/schemas";
 
 export function SignUpForm({ className, ...props }) {
+  const router = useRouter();
+  const [error, setError] = useState("");
+
   const {
     register,
     handleSubmit,
@@ -26,10 +31,26 @@ export function SignUpForm({ className, ...props }) {
 
   const onSubmit = async (data) => {
     try {
-      // Handle sign up logic here
-      console.log(data);
+      setError("");
+      const response = await fetch("/api/signUp_auth", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Something went wrong");
+      }
+
+      // Redirect to login page on successful signup
+      router.push("/auth/login?registered=true");
     } catch (error) {
       console.error(error);
+      setError(error.message);
     }
   };
 
@@ -38,12 +59,13 @@ export function SignUpForm({ className, ...props }) {
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Create an account</CardTitle>
-          <CardDescription>
-            Sign up with your Apple or Google account
-          </CardDescription>
+          <CardDescription>Sign up with your Google account</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)}>
+            {error && (
+              <div className="mb-4 text-sm text-destructive">{error}</div>
+            )}
             <div className="grid gap-6">
               <div className="flex flex-col gap-4">
                 <Button variant="outline" className="w-full">
@@ -68,7 +90,7 @@ export function SignUpForm({ className, ...props }) {
                     {...register("name")}
                     id="name"
                     type="text"
-                    placeholder="John Doe"
+                    placeholder="Jordan Brandth"
                   />
                   {errors.name && (
                     <p className="text-sm text-destructive">
