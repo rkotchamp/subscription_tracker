@@ -1,4 +1,8 @@
-import { ArrowLeft } from "lucide-react";
+"use client";
+
+import { ArrowLeft, Calendar, Mail, DollarSign } from "lucide-react";
+import { useState, useEffect } from "react";
+import { format } from "date-fns";
 import {
   Card,
   CardContent,
@@ -15,6 +19,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 // Mock data for category expenses
 const getCategoryExpenses = (category) =>
@@ -86,16 +104,57 @@ const getCategoryExpenses = (category) =>
   }[category.name] || []);
 
 export function CategoryDetails({ category, onBack }) {
+  const [mounted, setMounted] = useState(false);
+  const [dateRange, setDateRange] = useState({ from: null, to: null });
+  const [emailFilter, setEmailFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("default");
+
+  // Handle client-side only rendering
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const expenses = getCategoryExpenses(category);
-  const totalExpenses = expenses.reduce(
+
+  // Filter and sort expenses
+  const filteredExpenses = expenses
+    .filter((expense) => {
+      const matchesEmail =
+        emailFilter === "all" || expense.email.includes(emailFilter);
+      const expenseDate = new Date(expense.date);
+      const matchesDateRange =
+        !dateRange.from ||
+        !dateRange.to ||
+        (expenseDate >= dateRange.from && expenseDate <= dateRange.to);
+
+      return matchesEmail && matchesDateRange;
+    })
+    .sort((a, b) => {
+      if (sortBy === "amount") {
+        return b.amount - a.amount;
+      }
+      if (sortBy === "date") {
+        return new Date(b.date) - new Date(a.date);
+      }
+      return 0;
+    });
+
+  const totalExpenses = filteredExpenses.reduce(
     (sum, expense) => sum + expense.amount,
     0
   );
 
+  const uniqueEmails = [...new Set(expenses.map((expense) => expense.email))];
+
+  // Don't render until client-side hydration is complete
+  if (!mounted) {
+    return null;
+  }
+
   return (
     <Card className="col-span-2">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div className="space-y-1">
+      <CardHeader className="space-y-4">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
@@ -111,7 +170,86 @@ export function CategoryDetails({ category, onBack }) {
             Total Monthly Expenses: ${totalExpenses.toFixed(2)}
           </CardDescription>
         </div>
+
+        <div className="flex flex-wrap gap-4">
+          {/* Email Filter */}
+          <Select value={emailFilter} onValueChange={setEmailFilter}>
+            <SelectTrigger className="w-[200px]">
+              <Mail className="mr-2 h-4 w-4" />
+              <SelectValue placeholder="Filter by email" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                <span>All emails</span>
+              </SelectItem>
+              {uniqueEmails.map((email) => (
+                <SelectItem key={email} value={email}>
+                  <span>{email}</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Date Range Picker */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-[240px] justify-start text-left font-normal",
+                  !dateRange.from && "text-muted-foreground"
+                )}
+              >
+                <Calendar className="mr-2 h-4 w-4" />
+                {dateRange.from ? (
+                  dateRange.to ? (
+                    <>
+                      {format(dateRange.from, "LLL dd, y")} -{" "}
+                      {format(dateRange.to, "LLL dd, y")}
+                    </>
+                  ) : (
+                    format(dateRange.from, "LLL dd, y")
+                  )
+                ) : (
+                  <span>Pick a date range</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <CalendarComponent
+                initialFocus
+                mode="range"
+                selected={{
+                  from: dateRange.from,
+                  to: dateRange.to,
+                }}
+                onSelect={setDateRange}
+                numberOfMonths={2}
+              />
+            </PopoverContent>
+          </Popover>
+
+          {/* Sort by Amount */}
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-[200px]">
+              <DollarSign className="mr-2 h-4 w-4" />
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default">
+                <span>Default</span>
+              </SelectItem>
+              <SelectItem value="amount">
+                <span>Most Expensive</span>
+              </SelectItem>
+              <SelectItem value="date">
+                <span>Most Recent</span>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
+
       <CardContent>
         <Table>
           <TableHeader>
@@ -124,11 +262,11 @@ export function CategoryDetails({ category, onBack }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {expenses.map((expense, index) => (
+            {filteredExpenses.map((expense, index) => (
               <TableRow key={index}>
                 <TableCell className="font-medium">{expense.name}</TableCell>
                 <TableCell>
-                  {new Date(expense.date).toLocaleDateString()}
+                  {format(new Date(expense.date), "dd/MM/yyyy")}
                 </TableCell>
                 <TableCell>{expense.statement}</TableCell>
                 <TableCell className="text-muted-foreground">

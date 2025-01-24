@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Plus, AlertCircle } from "lucide-react";
 import { untrackedSubscriptions } from "@/lib/mock/mock-data";
+import { format } from "date-fns";
 
 export function UntrackedSubscriptions() {
   return (
@@ -68,7 +69,9 @@ export function UntrackedSubscriptions() {
               <TableRow key={index}>
                 <TableCell>{sub.name}</TableCell>
                 <TableCell>{sub.subject}</TableCell>
-                <TableCell>{new Date(sub.time).toLocaleString()}</TableCell>
+                <TableCell>
+                  {format(new Date(sub.time), "dd/MM/yyyy, HH:mm")}
+                </TableCell>
                 <TableCell>{sub.email}</TableCell>
                 <TableCell>
                   <Button size="sm" variant="outline">

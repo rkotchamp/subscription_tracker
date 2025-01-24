@@ -41,6 +41,16 @@ const miniChartData = subscriptionData.map((category) => ({
 }));
 
 export function SubscriptionChart({ onCategoryClick }) {
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
   return (
     <div className="grid gap-4 md:grid-cols-2">
       <Card className="col-span-2">
@@ -101,7 +111,7 @@ export function SubscriptionChart({ onCategoryClick }) {
           </PieChart>
         </CardContent>
       </Card>
-      {miniChartData.map((category, index) => (
+      {miniChartData.map((category) => (
         <Card
           key={category.name}
           className="cursor-pointer transition-colors hover:bg-muted"
@@ -120,6 +130,7 @@ export function SubscriptionChart({ onCategoryClick }) {
                 cy="50%"
                 innerRadius={25}
                 outerRadius={35}
+                dataKey="value"
                 fill="var(--muted)"
               />
               <Pie
@@ -133,6 +144,7 @@ export function SubscriptionChart({ onCategoryClick }) {
                 outerRadius={35}
                 startAngle={90}
                 endAngle={-270}
+                dataKey="value"
               >
                 <Cell fill={category.color} />
                 <Cell fill="transparent" />
