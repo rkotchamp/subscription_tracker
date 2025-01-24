@@ -2,20 +2,18 @@
 
 import * as React from "react";
 import {
-  AudioWaveform,
-  BookOpen,
-  Bot,
-  Command,
-  Frame,
-  GalleryVerticalEnd,
-  Map,
-  PieChart,
-  Settings2,
-  SquareTerminal,
+  Bell,
+  CreditCard,
+  FileText,
+  Home,
+  Mail,
+  Settings,
+  Upload,
+  Users,
 } from "lucide-react";
 
 import { NavMain } from "@/components/ui/Sidebar/UIs/nav-main";
-import { NavProjects } from "@/components/ui/Sidebar/UIs/nav-projects";
+import { QuickAccess } from "@/components/ui/Sidebar/UIs/quick-access";
 import { NavUser } from "@/components/ui/Sidebar/UIs/nav-user";
 import { TeamSwitcher } from "@/components/ui/Sidebar/UIs/team-switcher";
 import {
@@ -26,132 +24,111 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 
-// This is sample data.
+// Updated data structure for subscription tracker
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+    name: "User",
+    email: "user@example.com",
+    avatar: "/avatars/user.jpg",
   },
-  teams: [
+  emailAccounts: [
     {
-      name: "Acme Inc",
-      logo: GalleryVerticalEnd,
-      plan: "Enterprise",
+      name: "Personal Gmail",
+      logo: Mail,
+      type: "Gmail",
     },
     {
-      name: "Acme Corp.",
-      logo: AudioWaveform,
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: Command,
-      plan: "Free",
+      name: "Work Outlook",
+      logo: Mail,
+      type: "Outlook",
     },
   ],
   navMain: [
     {
-      title: "Playground",
-      url: "#",
-      icon: SquareTerminal,
+      title: "Dashboard",
+      url: "/dashboard",
+      icon: Home,
       isActive: true,
       items: [
         {
-          title: "History",
-          url: "#",
+          title: "Overview",
+          url: "/dashboard",
         },
         {
-          title: "Starred",
-          url: "#",
+          title: "Subscriptions",
+          url: "/dashboard/subscriptions",
         },
         {
-          title: "Settings",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Models",
-      url: "#",
-      icon: Bot,
-      items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
+          title: "Invoices",
+          url: "/dashboard/invoices",
         },
       ],
     },
     {
-      title: "Documentation",
-      url: "#",
-      icon: BookOpen,
+      title: "Email Accounts",
+      url: "/email-accounts",
+      icon: Mail,
       items: [
         {
-          title: "Introduction",
-          url: "#",
+          title: "Connected Accounts",
+          url: "/email-accounts",
         },
         {
-          title: "Get Started",
-          url: "#",
+          title: "Add Account",
+          url: "/email-accounts/add",
+        },
+      ],
+    },
+    {
+      title: "Manual Upload",
+      url: "/upload",
+      icon: Upload,
+      items: [
+        {
+          title: "Upload Invoice",
+          url: "/upload/invoice",
         },
         {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
+          title: "Upload History",
+          url: "/upload/history",
         },
       ],
     },
     {
       title: "Settings",
-      url: "#",
-      icon: Settings2,
+      url: "/settings",
+      icon: Settings,
       items: [
         {
-          title: "General",
-          url: "#",
+          title: "Profile",
+          url: "/settings/profile",
         },
         {
-          title: "Team",
-          url: "#",
+          title: "Notifications",
+          url: "/settings/notifications",
         },
         {
           title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
+          url: "/settings/billing",
         },
       ],
     },
   ],
-  projects: [
+  quickAccess: [
     {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
+      name: "Recent Invoices",
+      url: "/dashboard/invoices",
+      icon: FileText,
     },
     {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
+      name: "Pending Uploads",
+      url: "/upload",
+      icon: Upload,
     },
     {
-      name: "Travel",
-      url: "#",
-      icon: Map,
+      name: "Notifications",
+      url: "/notifications",
+      icon: Bell,
     },
   ],
 };
@@ -160,11 +137,11 @@ export function AppSidebar({ ...props }) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <TeamSwitcher emailAccounts={data.emailAccounts} />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
+        <QuickAccess items={data.quickAccess} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />
