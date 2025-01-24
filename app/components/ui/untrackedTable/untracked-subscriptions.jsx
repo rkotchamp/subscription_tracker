@@ -16,17 +16,41 @@ import {
   TableHeader,
   TableRow,
 } from "../table";
-import { Plus } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Plus, AlertCircle } from "lucide-react";
 import { untrackedSubscriptions } from "@/lib/mock/mock-data";
 
 export function UntrackedSubscriptions() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Untracked Subscriptions</CardTitle>
-        <CardDescription>
-          Potential subscriptions that need your attention
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Untracked Subscriptions</CardTitle>
+            <CardDescription>
+              Potential subscriptions that need your attention
+            </CardDescription>
+          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <AlertCircle className="h-4 w-4 text-muted-foreground" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-[300px] p-4">
+                <p>
+                  These are subscription-related emails that our system has
+                  detected but hasn't been able to automatically track. They
+                  might need manual verification or additional information.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </CardHeader>
       <CardContent>
         <Table>
