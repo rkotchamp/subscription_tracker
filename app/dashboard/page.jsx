@@ -14,6 +14,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { SubscriptionChart } from "@/components/ui/Chart/chart-pie-donut";
+import { UntrackedSubscriptions } from "@/components/ui/untrackedTable/untracked-subscriptions";
 
 export default function Page() {
   return (
@@ -37,6 +38,7 @@ export default function Page() {
           <div className="grid auto-rows-min gap-4 md:grid-cols-2">
             <SubscriptionChart />
             <div className="grid gap-4">
+              <UntrackedSubscriptions />
               {/* <div className="aspect-video rounded-xl bg-muted/50" />
               <div className="aspect-video rounded-xl bg-muted/50" />
               <div className="aspect-video rounded-xl bg-muted/50" /> */}
