@@ -10,16 +10,20 @@ export function Overview() {
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   return (
-    <div className="flex flex-1 flex-col gap-4">
-      <div className="grid auto-rows-min gap-4 md:grid-cols-2">
+    <div className="flex flex-col space-y-4 min-h-full">
+      <div className="grid gap-4 md:grid-cols-2 h-full">
         {selectedCategory ? (
-          <CategoryDetails
-            category={selectedCategory}
-            onBack={() => setSelectedCategory(null)}
-          />
+          <div className="md:col-span-2">
+            <CategoryDetails
+              category={selectedCategory}
+              onBack={() => setSelectedCategory(null)}
+            />
+          </div>
         ) : (
           <>
-            <SubscriptionChart onCategoryClick={setSelectedCategory} />
+            <div className="rounded-xl border bg-card text-card-foreground shadow">
+              <SubscriptionChart onCategoryClick={setSelectedCategory} />
+            </div>
             <div className="grid gap-4">
               <UntrackedSubscriptions />
               <UpcomingSubscriptions />
@@ -27,7 +31,6 @@ export function Overview() {
           </>
         )}
       </div>
-      <div className="min-h-[50vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" />
     </div>
   );
 }

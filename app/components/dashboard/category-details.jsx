@@ -152,134 +152,136 @@ export function CategoryDetails({ category, onBack }) {
   }
 
   return (
-    <Card className="col-span-2">
-      <CardHeader className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onBack}
-              className="h-8 w-8"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <CardTitle>{category.name} Expenses</CardTitle>
-          </div>
-          <CardDescription>
-            Total Monthly Expenses: ${totalExpenses.toFixed(2)}
-          </CardDescription>
-        </div>
-
-        <div className="flex flex-wrap gap-4">
-          {/* Email Filter */}
-          <Select value={emailFilter} onValueChange={setEmailFilter}>
-            <SelectTrigger className="w-[200px]">
-              <Mail className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Filter by email" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">
-                <span>All emails</span>
-              </SelectItem>
-              {uniqueEmails.map((email) => (
-                <SelectItem key={email} value={email}>
-                  <span>{email}</span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {/* Date Range Picker */}
-          <Popover>
-            <PopoverTrigger asChild>
+    <div className="h-full">
+      <Card className="h-full">
+        <CardHeader className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
               <Button
-                variant="outline"
-                className={cn(
-                  "w-[240px] justify-start text-left font-normal",
-                  !dateRange.from && "text-muted-foreground"
-                )}
+                variant="ghost"
+                size="icon"
+                onClick={onBack}
+                className="h-8 w-8"
               >
-                <Calendar className="mr-2 h-4 w-4" />
-                {dateRange.from ? (
-                  dateRange.to ? (
-                    <>
-                      {format(dateRange.from, "LLL dd, y")} -{" "}
-                      {format(dateRange.to, "LLL dd, y")}
-                    </>
-                  ) : (
-                    format(dateRange.from, "LLL dd, y")
-                  )
-                ) : (
-                  <span>Pick a date range</span>
-                )}
+                <ArrowLeft className="h-4 w-4" />
               </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <CalendarComponent
-                initialFocus
-                mode="range"
-                selected={{
-                  from: dateRange.from,
-                  to: dateRange.to,
-                }}
-                onSelect={setDateRange}
-                numberOfMonths={2}
-              />
-            </PopoverContent>
-          </Popover>
+              <CardTitle>{category.name} Expenses</CardTitle>
+            </div>
+            <CardDescription>
+              Total Monthly Expenses: ${totalExpenses.toFixed(2)}
+            </CardDescription>
+          </div>
 
-          {/* Sort by Amount */}
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[200px]">
-              <DollarSign className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="default">
-                <span>Default</span>
-              </SelectItem>
-              <SelectItem value="amount">
-                <span>Most Expensive</span>
-              </SelectItem>
-              <SelectItem value="date">
-                <span>Most Recent</span>
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </CardHeader>
+          <div className="flex flex-wrap gap-4">
+            {/* Email Filter */}
+            <Select value={emailFilter} onValueChange={setEmailFilter}>
+              <SelectTrigger className="w-[200px]">
+                <Mail className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Filter by email" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  <span>All emails</span>
+                </SelectItem>
+                {uniqueEmails.map((email) => (
+                  <SelectItem key={email} value={email}>
+                    <span>{email}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Statement</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredExpenses.map((expense, index) => (
-              <TableRow key={index}>
-                <TableCell className="font-medium">{expense.name}</TableCell>
-                <TableCell>
-                  {format(new Date(expense.date), "dd/MM/yyyy")}
-                </TableCell>
-                <TableCell>{expense.statement}</TableCell>
-                <TableCell className="text-muted-foreground">
-                  {expense.email}
-                </TableCell>
-                <TableCell className="text-right">
-                  ${expense.amount.toFixed(2)}
-                </TableCell>
+            {/* Date Range Picker */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-[240px] justify-start text-left font-normal",
+                    !dateRange.from && "text-muted-foreground"
+                  )}
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  {dateRange.from ? (
+                    dateRange.to ? (
+                      <>
+                        {format(dateRange.from, "LLL dd, y")} -{" "}
+                        {format(dateRange.to, "LLL dd, y")}
+                      </>
+                    ) : (
+                      format(dateRange.from, "LLL dd, y")
+                    )
+                  ) : (
+                    <span>Pick a date range</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarComponent
+                  initialFocus
+                  mode="range"
+                  selected={{
+                    from: dateRange.from,
+                    to: dateRange.to,
+                  }}
+                  onSelect={setDateRange}
+                  numberOfMonths={2}
+                />
+              </PopoverContent>
+            </Popover>
+
+            {/* Sort by Amount */}
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-[200px]">
+                <DollarSign className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">
+                  <span>Default</span>
+                </SelectItem>
+                <SelectItem value="amount">
+                  <span>Most Expensive</span>
+                </SelectItem>
+                <SelectItem value="date">
+                  <span>Most Recent</span>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+
+        <CardContent className="h-full">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Statement</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+            </TableHeader>
+            <TableBody>
+              {filteredExpenses.map((expense, index) => (
+                <TableRow key={index}>
+                  <TableCell className="font-medium">{expense.name}</TableCell>
+                  <TableCell>
+                    {format(new Date(expense.date), "dd/MM/yyyy")}
+                  </TableCell>
+                  <TableCell>{expense.statement}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {expense.email}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    ${expense.amount.toFixed(2)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

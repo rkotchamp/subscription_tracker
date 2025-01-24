@@ -66,16 +66,16 @@ const data = {
     },
     {
       title: "Email Accounts",
-      url: "/email-accounts",
+      url: "/dashboard/email-accounts",
       icon: Mail,
       items: [
         {
           title: "Connected Accounts",
-          url: "/email-accounts",
+          url: "/dashboard/email-accounts",
         },
         {
           title: "Add Account",
-          url: "/email-accounts/add",
+          url: "/dashboard/email-accounts/add",
         },
       ],
     },
