@@ -48,11 +48,11 @@ const data = {
       title: "Dashboard",
       url: "/dashboard",
       icon: Home,
-      isActive: true,
       items: [
         {
           title: "Overview",
           url: "/dashboard",
+          isActive: true,
         },
         {
           title: "Subscriptions",

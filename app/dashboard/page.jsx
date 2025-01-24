@@ -2,10 +2,8 @@ import { AppSidebar } from "../components/ui/Sidebar/app-sidebar";
 import {
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
-  BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -13,9 +11,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { SubscriptionChart } from "@/components/ui/Chart/chart-pie-donut";
-import { UntrackedSubscriptions } from "@/components/ui/untrackedTable/untracked-subscriptions";
-import { UpcomingSubscriptions } from "@/components/ui/upcomingTable/upcoming-subscriptions";
+import { Overview } from "@/components/dashboard/overview";
 
 export default function Page() {
   return (
@@ -35,18 +31,8 @@ export default function Page() {
             </Breadcrumb>
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="grid auto-rows-min gap-4 md:grid-cols-2">
-            <SubscriptionChart />
-            <div className="grid gap-4">
-              <UntrackedSubscriptions />
-              <UpcomingSubscriptions />
-              {/* <div className="aspect-video rounded-xl bg-muted/50" />
-              <div className="aspect-video rounded-xl bg-muted/50" />
-              <div className="aspect-video rounded-xl bg-muted/50" /> */}
-            </div>
-          </div>
-          <div className="min-h-[50vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" />
+        <div className="p-4 pt-0">
+          <Overview />
         </div>
       </SidebarInset>
     </SidebarProvider>

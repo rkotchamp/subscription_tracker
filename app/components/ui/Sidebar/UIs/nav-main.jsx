@@ -1,6 +1,8 @@
 "use client";
 
 import { ChevronRight } from "lucide-react";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 
 import {
   Collapsible,
@@ -14,11 +16,13 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
-  SidebarMenuSubButton,
   SidebarMenuSubItem,
+  SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
 
 export function NavMain({ items }) {
+  const pathname = usePathname();
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Platform</SidebarGroupLabel>
@@ -27,7 +31,9 @@ export function NavMain({ items }) {
           <Collapsible
             key={item.title}
             asChild
-            defaultOpen={item.isActive}
+            defaultOpen={item.items?.some(
+              (subItem) => subItem.url === pathname
+            )}
             className="group/collapsible"
           >
             <SidebarMenuItem>
@@ -42,10 +48,17 @@ export function NavMain({ items }) {
                 <SidebarMenuSub>
                   {item.items?.map((subItem) => (
                     <SidebarMenuSubItem key={subItem.title}>
-                      <SidebarMenuSubButton asChild>
-                        <a href={subItem.url}>
+                      <SidebarMenuSubButton
+                        asChild
+                        className={
+                          pathname === subItem.url
+                            ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                            : ""
+                        }
+                      >
+                        <Link href={subItem.url}>
                           <span>{subItem.title}</span>
-                        </a>
+                        </Link>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                   ))}
