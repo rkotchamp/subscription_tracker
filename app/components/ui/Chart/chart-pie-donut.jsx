@@ -40,7 +40,7 @@ const miniChartData = subscriptionData.map((category) => ({
   percentage: ((category.value / totalAmount) * 100).toFixed(1),
 }));
 
-export function SubscriptionChart() {
+export function SubscriptionChart({ onCategoryClick }) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       <Card className="col-span-2">
@@ -102,7 +102,11 @@ export function SubscriptionChart() {
         </CardContent>
       </Card>
       {miniChartData.map((category, index) => (
-        <Card key={category.name}>
+        <Card
+          key={category.name}
+          className="cursor-pointer transition-colors hover:bg-muted"
+          onClick={() => onCategoryClick?.(category)}
+        >
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
               {category.name}
