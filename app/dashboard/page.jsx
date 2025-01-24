@@ -12,7 +12,7 @@ import { Overview } from "@/components/dashboard/overview";
 
 export default function Page() {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col   w-full">
       <header className="flex h-16 shrink-0 items-center border-b">
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
@@ -26,7 +26,7 @@ export default function Page() {
           </Breadcrumb>
         </div>
       </header>
-      <div className="flex-1 p-4">
+      <div className="p-4">
         <Overview />
       </div>
     </div>

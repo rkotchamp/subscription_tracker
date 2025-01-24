@@ -152,7 +152,7 @@ export function CategoryDetails({ category, onBack }) {
   }
 
   return (
-    <div className="h-full">
+    <div className="h-full bg-black-500">
       <Card className="h-full">
         <CardHeader className="space-y-4">
           <div className="flex items-center justify-between">

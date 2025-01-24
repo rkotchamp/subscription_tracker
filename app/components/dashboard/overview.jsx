@@ -10,10 +10,10 @@ export function Overview() {
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   return (
-    <div className="flex flex-col space-y-4 min-h-full">
-      <div className="grid gap-4 md:grid-cols-2 h-full">
+    <div className="flex flex-col w-full pr-4">
+      <div className="grid gap-4 md:grid-cols-2 w-full">
         {selectedCategory ? (
-          <div className="md:col-span-2">
+          <div className="md:col-span-2 w-full">
             <CategoryDetails
               category={selectedCategory}
               onBack={() => setSelectedCategory(null)}
