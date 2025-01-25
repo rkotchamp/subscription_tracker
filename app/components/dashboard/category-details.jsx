@@ -146,6 +146,10 @@ export function CategoryDetails({ category, onBack }) {
 
   const uniqueEmails = [...new Set(expenses.map((expense) => expense.email))];
 
+  // Get today's date at the start of the day
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   // Don't render until client-side hydration is complete
   if (!mounted) {
     return null;
@@ -191,7 +195,7 @@ export function CategoryDetails({ category, onBack }) {
               </SelectContent>
             </Select>
 
-            {/* Date Range Picker */}
+            {/* Modified Date Range Picker */}
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -226,6 +230,8 @@ export function CategoryDetails({ category, onBack }) {
                   }}
                   onSelect={setDateRange}
                   numberOfMonths={2}
+                  disabled={(date) => date > today} // Disable future dates
+                  defaultMonth={today} // Set default month to current month
                 />
               </PopoverContent>
             </Popover>

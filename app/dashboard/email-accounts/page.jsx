@@ -26,6 +26,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Mail, MailPlus } from "lucide-react";
+import { format } from "date-fns";
 
 export default function EmailAccountsPage() {
   const [showProviders, setShowProviders] = useState(false);
@@ -106,7 +107,7 @@ export default function EmailAccountsPage() {
                       </span>
                     </TableCell>
                     <TableCell>
-                      {new Date(account.lastSynced).toLocaleDateString()}
+                      {format(new Date(account.lastSynced), "dd/MM/yyyy")}
                     </TableCell>
                     <TableCell>
                       <Button variant="ghost" size="sm">
