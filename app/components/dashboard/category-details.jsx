@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Calendar, Mail, DollarSign } from "lucide-react";
+import { ArrowLeft, Calendar, Mail, DollarSign, RotateCcw } from "lucide-react";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import {
@@ -150,6 +150,13 @@ export function CategoryDetails({ category, onBack }) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  // Add clear filters function
+  const handleClearFilters = () => {
+    setEmailFilter("all");
+    setSortBy("default");
+    setDateRange({ from: null, to: null });
+  };
+
   // Don't render until client-side hydration is complete
   if (!mounted) {
     return null;
@@ -159,24 +166,24 @@ export function CategoryDetails({ category, onBack }) {
     <div className="h-full bg-black-500">
       <Card className="h-full">
         <CardHeader className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onBack}
-                className="h-8 w-8"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <CardTitle>{category.name} Expenses</CardTitle>
+          <div className="flex items-center space-x-4">
+            <Button
+              onClick={onBack}
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <CardTitle>{category.name}</CardTitle>
+              <CardDescription>
+                Total: ${totalExpenses.toFixed(2)}
+              </CardDescription>
             </div>
-            <CardDescription>
-              Total Monthly Expenses: ${totalExpenses.toFixed(2)}
-            </CardDescription>
           </div>
 
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             {/* Email Filter */}
             <Select value={emailFilter} onValueChange={setEmailFilter}>
               <SelectTrigger className="w-[200px]">
@@ -195,7 +202,26 @@ export function CategoryDetails({ category, onBack }) {
               </SelectContent>
             </Select>
 
-            {/* Modified Date Range Picker */}
+            {/* Sort by Amount */}
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-[200px]">
+                <DollarSign className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">
+                  <span>Default</span>
+                </SelectItem>
+                <SelectItem value="amount">
+                  <span>Most Expensive</span>
+                </SelectItem>
+                <SelectItem value="date">
+                  <span>Most Recent</span>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Date Range Picker */}
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -236,24 +262,16 @@ export function CategoryDetails({ category, onBack }) {
               </PopoverContent>
             </Popover>
 
-            {/* Sort by Amount */}
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-[200px]">
-                <DollarSign className="mr-2 h-4 w-4" />
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="default">
-                  <span>Default</span>
-                </SelectItem>
-                <SelectItem value="amount">
-                  <span>Most Expensive</span>
-                </SelectItem>
-                <SelectItem value="date">
-                  <span>Most Recent</span>
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Clear Filters Button - Now positioned next to filters */}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleClearFilters}
+              className="h-10 w-10"
+              title="Clear all filters"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </Button>
           </div>
         </CardHeader>
 

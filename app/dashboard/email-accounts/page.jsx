@@ -91,31 +91,43 @@ export default function EmailAccountsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {emailAccounts.map((account) => (
-                  <TableRow key={account.id}>
-                    <TableCell>{account.email}</TableCell>
-                    <TableCell>{account.provider}</TableCell>
-                    <TableCell>
-                      <span
-                        className={`px-2 py-1 rounded-full text-sm ${
-                          account.status === "active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
-                      >
-                        {account.status}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(account.lastSynced), "dd/MM/yyyy")}
-                    </TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="sm">
-                        Manage
-                      </Button>
+                {emailAccounts.length > 0 ? (
+                  emailAccounts.map((account) => (
+                    <TableRow key={account.id}>
+                      <TableCell>{account.email}</TableCell>
+                      <TableCell>{account.provider}</TableCell>
+                      <TableCell>
+                        <span
+                          className={`px-2 py-1 rounded-full text-sm ${
+                            account.status === "active"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}
+                        >
+                          {account.status}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        {format(new Date(account.lastSynced), "dd/MM/yyyy")}
+                      </TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm">
+                          Manage
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={5}
+                      className="text-center text-muted-foreground"
+                    >
+                      No email accounts connected. Click "Add New Email" to get
+                      started.
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </CardContent>

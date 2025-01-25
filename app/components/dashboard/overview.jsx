@@ -1,13 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { SubscriptionChart } from "@/components/ui/Chart/chart-pie-donut";
 import { UntrackedSubscriptions } from "@/components/ui/untrackedTable/untracked-subscriptions";
 import { UpcomingSubscriptions } from "@/components/ui/upcomingTable/upcoming-subscriptions";
 import { CategoryDetails } from "@/components/dashboard/category-details";
 
 export function Overview() {
+  const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState(null);
+
+  const handleCategoryClick = (category) => {
+    setSelectedCategory(category);
+  };
+
+  const handleTotalClick = () => {
+    router.push('/dashboard/subscriptions');
+  };
 
   return (
     <div className="flex flex-col w-full pr-4">
@@ -22,7 +32,10 @@ export function Overview() {
         ) : (
           <>
             <div className="rounded-xl border bg-card text-card-foreground shadow">
-              <SubscriptionChart onCategoryClick={setSelectedCategory} />
+              <SubscriptionChart 
+                onCategoryClick={handleCategoryClick}
+                onTotalClick={handleTotalClick} 
+              />
             </div>
             <div className="grid gap-4">
               <UntrackedSubscriptions />

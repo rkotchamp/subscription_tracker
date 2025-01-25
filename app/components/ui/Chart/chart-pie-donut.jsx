@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { PieChart, Pie, Cell, Tooltip, Label } from "recharts";
 import {
   Card,
@@ -40,7 +41,8 @@ const miniChartData = subscriptionData.map((category) => ({
   percentage: ((category.value / totalAmount) * 100).toFixed(1),
 }));
 
-export function SubscriptionChart({ onCategoryClick }) {
+export function SubscriptionChart({ onCategoryClick, onTotalClick }) {
+  const router = useRouter();
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -68,9 +70,24 @@ export function SubscriptionChart({ onCategoryClick }) {
               outerRadius={80}
               paddingAngle={5}
               dataKey="value"
+              onClick={(_, __, e) => {
+                // If clicking the center or general pie area
+                if (!e?.payload?.name) {
+                  onTotalClick();
+                }
+              }}
+              style={{ cursor: "pointer" }}
             >
               {subscriptionData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
+                <Cell
+                  key={`cell-${index}`}
+                  fill={entry.color}
+                  onClick={(e) => {
+                    // Stop event from bubbling to prevent double handling
+                    e.stopPropagation();
+                    onCategoryClick(entry);
+                  }}
+                />
               ))}
               <Label
                 content={({ viewBox: { cx, cy } }) => (
@@ -80,6 +97,8 @@ export function SubscriptionChart({ onCategoryClick }) {
                     fill="var(--foreground)"
                     textAnchor="middle"
                     dominantBaseline="central"
+                    className="cursor-pointer"
+                    onClick={onTotalClick}
                   >
                     <tspan x={cx} dy="-0.5em" fontSize="24" fontWeight="bold">
                       ${totalAmount}
@@ -115,7 +134,7 @@ export function SubscriptionChart({ onCategoryClick }) {
         <Card
           key={category.name}
           className="cursor-pointer transition-colors hover:bg-muted"
-          onClick={() => onCategoryClick?.(category)}
+          onClick={() => onCategoryClick(category)}
         >
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
