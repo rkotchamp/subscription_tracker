@@ -11,6 +11,8 @@ import {
   Upload,
   Users,
   LayoutDashboard,
+  Crown,
+  HelpCircle,
 } from "lucide-react";
 
 import { NavMain } from "@/components/ui/Sidebar/UIs/nav-main";
@@ -97,39 +99,44 @@ const data = {
     },
     {
       title: "Settings",
-      url: "/settings",
+      url: "/dashboard",
       icon: Settings,
       items: [
         {
-          title: "Profile",
-          url: "/settings/profile",
+          title: "Account",
+          url: "/dashboard/settings/account",
         },
         {
           title: "Notifications",
-          url: "/settings/notifications",
+          url: "/dashboard/settings/notifications",
         },
         {
           title: "Billing",
-          url: "/settings/billing",
+          url: "/dashboard/settings/billing",
         },
       ],
     },
   ],
   quickAccess: [
     {
-      name: "Recent Invoices",
-      url: "/dashboard/invoices",
+      name: "Upgrade Pro",
+      url: "/upgrade-pro",
+      icon: Crown,
+    },
+    {
+      name: "What's New",
+      url: "/whats-new",
+      icon: Bell,
+    },
+    {
+      name: "Privacy Policy",
+      url: "/privacy",
       icon: FileText,
     },
     {
-      name: "Pending Uploads",
-      url: "/upload",
-      icon: Upload,
-    },
-    {
-      name: "Notifications",
-      url: "/notifications",
-      icon: Bell,
+      name: "Help & Support",
+      url: "/support",
+      icon: HelpCircle,
     },
   ],
 };
