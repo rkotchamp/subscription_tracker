@@ -54,14 +54,15 @@ export function SubscriptionChart({ onCategoryClick, onTotalClick }) {
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      <Card className="col-span-2">
+    <div className="flex flex-col w-full">
+      {/* Main Pie Chart - Full width on mobile */}
+      <Card className="w-full mb-4">
         <CardHeader>
           <CardTitle>Total Subscriptions</CardTitle>
           <CardDescription>Monthly subscription breakdown</CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center">
-          <PieChart width={300} height={300}>
+          <PieChart width={300} height={300} className="w-full max-w-[300px]">
             <Pie
               data={subscriptionData}
               cx="50%"
@@ -71,7 +72,6 @@ export function SubscriptionChart({ onCategoryClick, onTotalClick }) {
               paddingAngle={5}
               dataKey="value"
               onClick={(_, __, e) => {
-                // If clicking the center or general pie area
                 if (!e?.payload?.name) {
                   onTotalClick();
                 }
@@ -83,7 +83,6 @@ export function SubscriptionChart({ onCategoryClick, onTotalClick }) {
                   key={`cell-${index}`}
                   fill={entry.color}
                   onClick={(e) => {
-                    // Stop event from bubbling to prevent double handling
                     e.stopPropagation();
                     onCategoryClick(entry);
                   }}
@@ -110,83 +109,77 @@ export function SubscriptionChart({ onCategoryClick, onTotalClick }) {
                 )}
               />
             </Pie>
-            <Tooltip
-              content={({ payload }) => {
-                if (payload && payload[0]) {
-                  const data = payload[0].payload;
-                  return (
-                    <div className="rounded-lg border bg-background p-2 shadow-md">
-                      <div className="font-medium">{data.name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        ${data.value} (
-                        {((data.value / totalAmount) * 100).toFixed(1)}%)
-                      </div>
-                    </div>
-                  );
-                }
-                return null;
-              }}
-            />
+            <Tooltip />
           </PieChart>
         </CardContent>
       </Card>
-      {miniChartData.map((category) => (
-        <Card
-          key={category.name}
-          className="cursor-pointer transition-colors hover:bg-muted"
-          onClick={() => onCategoryClick(category)}
-        >
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              {category.name}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <PieChart width={100} height={100}>
-              <Pie
-                data={[{ value: 100 }]}
-                cx="50%"
-                cy="50%"
-                innerRadius={25}
-                outerRadius={35}
-                dataKey="value"
-                fill="var(--muted)"
-              />
-              <Pie
-                data={[
-                  { value: parseFloat(category.percentage) },
-                  { value: 100 - parseFloat(category.percentage) },
-                ]}
-                cx="50%"
-                cy="50%"
-                innerRadius={25}
-                outerRadius={35}
-                startAngle={90}
-                endAngle={-270}
-                dataKey="value"
-              >
-                <Cell fill={category.color} />
-                <Cell fill="transparent" />
-                <Label
-                  content={({ viewBox: { cx, cy } }) => (
-                    <text
-                      x={cx}
-                      y={cy}
-                      fill="var(--foreground)"
-                      textAnchor="middle"
-                      dominantBaseline="central"
-                    >
-                      <tspan x={cx} fontSize="14" fontWeight="bold">
-                        ${category.value}
-                      </tspan>
-                    </text>
-                  )}
-                />
-              </Pie>
-            </PieChart>
-          </CardContent>
-        </Card>
-      ))}
+
+      {/* Mini Charts - Grid on desktop, stack on mobile */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {miniChartData.map((category) => (
+          <Card
+            key={category.name}
+            className="cursor-pointer transition-colors hover:bg-muted w-full"
+            onClick={() => onCategoryClick(category)}
+          >
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">
+                {category.name}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-center">
+                <PieChart
+                  width={100}
+                  height={100}
+                  className="w-full max-w-[100px]"
+                >
+                  <Pie
+                    data={[{ value: 100 }]}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={25}
+                    outerRadius={35}
+                    dataKey="value"
+                    fill="var(--muted)"
+                  />
+                  <Pie
+                    data={[
+                      { value: parseFloat(category.percentage) },
+                      { value: 100 - parseFloat(category.percentage) },
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={25}
+                    outerRadius={35}
+                    startAngle={90}
+                    endAngle={-270}
+                    dataKey="value"
+                  >
+                    <Cell fill={category.color} />
+                    <Cell fill="transparent" />
+                    <Label
+                      content={({ viewBox: { cx, cy } }) => (
+                        <text
+                          x={cx}
+                          y={cy}
+                          fill="var(--foreground)"
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                        >
+                          <tspan x={cx} fontSize="14" fontWeight="bold">
+                            ${category.value}
+                          </tspan>
+                        </text>
+                      )}
+                    />
+                  </Pie>
+                </PieChart>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }

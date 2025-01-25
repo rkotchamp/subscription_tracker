@@ -10,6 +10,7 @@ import {
   Settings,
   Upload,
   Users,
+  LayoutDashboard,
 } from "lucide-react";
 
 import { NavMain } from "@/components/ui/Sidebar/UIs/nav-main";
@@ -58,10 +59,10 @@ const data = {
           title: "Subscriptions",
           url: "/dashboard/subscriptions",
         },
-        {
-          title: "Invoices",
-          url: "/dashboard/invoices",
-        },
+        // {
+        //   title: "Invoices",
+        //   url: "/dashboard/invoices",
+        // },
       ],
     },
     {
@@ -73,25 +74,25 @@ const data = {
           title: "Connected Accounts",
           url: "/dashboard/email-accounts",
         },
-        {
-          title: "Add Account",
-          url: "/dashboard/email-accounts/add",
-        },
+        // {
+        //   title: "Add Account",
+        //   url: "/dashboard/email-accounts/add",
+        // },
       ],
     },
     {
       title: "Manual Upload",
-      url: "/upload",
+      url: "/dashboard/upload",
       icon: Upload,
       items: [
         {
           title: "Upload Invoice",
-          url: "/upload/invoice",
+          url: "/dashboard/upload",
         },
-        {
-          title: "Upload History",
-          url: "/upload/history",
-        },
+        // {
+        //   title: "Upload History",
+        //   url: "/upload/history",
+        // },
       ],
     },
     {
@@ -132,6 +133,20 @@ const data = {
     },
   ],
 };
+
+const navigation = [
+  {
+    title: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    title: "Manual Upload",
+    href: "/upload",
+    icon: Upload,
+  },
+  // ... other navigation items ...
+];
 
 export function AppSidebar({ ...props }) {
   return (
