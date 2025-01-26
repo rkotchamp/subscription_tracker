@@ -130,12 +130,12 @@ const data = {
     },
     {
       name: "Privacy Policy",
-      url: "/privacy",
+      url: "/privacy?section=privacy",
       icon: FileText,
     },
     {
       name: "Help & Support",
-      url: "/support",
+      url: "/privacy?section=support",
       icon: HelpCircle,
     },
   ],

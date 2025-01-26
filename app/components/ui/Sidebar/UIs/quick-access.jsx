@@ -16,7 +16,11 @@ export function QuickAccess({ items }) {
         {items.map((item) => (
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton asChild>
-              <a href={item.url}>
+              <a 
+                href={item.url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
                 <item.icon />
                 <span>{item.name}</span>
               </a>
