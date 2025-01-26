@@ -19,7 +19,7 @@ export function QuickAccess({ items }) {
               <a 
                 href={item.url} 
                 target="_blank" 
-                rel="noopener noreferrer"
+                rel="noopener"
               >
                 <item.icon />
                 <span>{item.name}</span>

@@ -124,7 +124,7 @@ export default function PrivacyPage() {
   };
 
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex flex-col w-full ">
       <header className="flex h-16 shrink-0 items-center border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
@@ -139,7 +139,7 @@ export default function PrivacyPage() {
         </div>
       </header>
 
-      <div className="flex h-[calc(100vh-4rem)]">
+      <div className="flex h-[calc(100vh-4rem)] ">
         {/* Sidebar Navigation */}
         <div className="w-64 border-r bg-muted/10">
           <div className="flex flex-col gap-2 p-4">
@@ -161,9 +161,9 @@ export default function PrivacyPage() {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1">
-          <ScrollArea className="h-full">
-            <div className="max-w-3xl mx-auto p-6 space-y-8">
+        <div className="flex-1 ">
+          <ScrollArea className="h-full ">
+            <div className="max-w-6xl mx-auto p-6 space-y-8  w-full">
               <div>
                 <h1 className="text-2xl font-bold">
                   {content[activeSection].title}
