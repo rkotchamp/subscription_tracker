@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -16,14 +17,19 @@ export function QuickAccess({ items }) {
         {items.map((item) => (
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton asChild>
-              <a 
-                href={item.url} 
-                target="_blank" 
-                rel="noopener"
-              >
-                <item.icon />
-                <span>{item.name}</span>
-              </a>
+              {item.url.startsWith("/") ? (
+                // Internal links use Next.js Link
+                <Link href={item.url}>
+                  <item.icon />
+                  <span>{item.name}</span>
+                </Link>
+              ) : (
+                // External links use regular anchor tags
+                <a href={item.url} target="_blank" rel="noopener noreferrer">
+                  <item.icon />
+                  <span>{item.name}</span>
+                </a>
+              )}
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}

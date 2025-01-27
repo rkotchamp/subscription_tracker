@@ -119,13 +119,13 @@ const data = {
   ],
   quickAccess: [
     {
-      name: "Upgrade Pro",
-      url: "/upgrade-pro",
+      name: "Upgrade to Pro",
+      url: "/prices",
       icon: Crown,
     },
     {
       name: "What's New",
-      url: "/whats-new",
+      url: "/dashboard/settings/notifications",
       icon: Bell,
     },
     {

@@ -148,8 +148,12 @@ export default function PrivacyPage() {
               return (
                 <Button
                   key={item.id}
-                  variant={activeSection === item.id ? "default" : "ghost"}
-                  className="justify-start hover:bg-muted"
+                  variant={activeSection === item.id ? "primary" : "ghost"}
+                  className={`justify-start [&:not(:active)]:hover:bg-muted ${
+                    activeSection === item.id
+                      ? "[&]:bg-primary [&]:text-primary-foreground [&:hover]:bg-primary/90"
+                      : ""
+                  }`}
                   onClick={() => handleSectionChange(item.id)}
                 >
                   <Icon className="mr-2 h-4 w-4" />
