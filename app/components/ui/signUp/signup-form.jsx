@@ -17,7 +17,7 @@ import { Input } from "../input";
 import { Label } from "../label";
 import { signUpSchema } from "../../../lib/schemas";
 
-export function SignUpForm({ className, ...props }) {
+export default function SignUpForm({ className, ...props }) {
   const router = useRouter();
   const [error, setError] = useState("");
 

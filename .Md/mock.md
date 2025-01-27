@@ -141,18 +141,6 @@ const userData = {
 
 ```javascript
 // Email Account Switcher Data
-const emailAccounts = [
-  {
-    name: "Personal Gmail",
-    logo: Mail,
-    type: "Gmail",
-  },
-  {
-    name: "Work Outlook",
-    logo: Mail,
-    type: "Outlook",
-  },
-];
 ```
 
 ## Notes
