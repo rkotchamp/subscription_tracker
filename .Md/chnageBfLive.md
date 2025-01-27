@@ -4,6 +4,8 @@
 
 ### change the mongodb uri in .env.local
 
+### chnage the callback uri in google cloud console
+
 ### This is about the date picker in the category details page:The date picker will only show when the date range from the date the user signed up to the current date,all dates after that will gray out
 
 ### The info messaging on the on the untracked subscriptions need to be changed to a more casual tone than sounding so formal

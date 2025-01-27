@@ -14,7 +14,8 @@ Stores user details and email account information.
   "email": "string",
   "password": "hashed string",
   "emailAccounts": ["array of connected email addresses"],
-  "createdAt": "timestamp"
+  "createdAt": "timestamp",
+  "googleId": "string"
 }
 ```
 
