@@ -17,16 +17,34 @@ export function QuickAccess({ items }) {
         {items.map((item) => (
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton asChild>
-              {item.url.startsWith("/") ? (
-                // Internal links use Next.js Link
-                <Link href={item.url}>
-                  <item.icon />
-                  <span>{item.name}</span>
-                </Link>
+              {item.internal ? (
+                item.url.includes("/privacy") ? (
+                  // Privacy and Help & Support links open in new tab
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2"
+                  >
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.name}</span>
+                  </a>
+                ) : (
+                  // Other internal links use Next.js Link
+                  <Link href={item.url} className="flex items-center gap-2">
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.name}</span>
+                  </Link>
+                )
               ) : (
-                // External links use regular anchor tags
-                <a href={item.url} target="_blank" rel="noopener noreferrer">
-                  <item.icon />
+                // External links
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2"
+                >
+                  <item.icon className="h-4 w-4" />
                   <span>{item.name}</span>
                 </a>
               )}

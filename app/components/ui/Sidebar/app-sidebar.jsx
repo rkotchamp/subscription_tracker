@@ -122,21 +122,25 @@ const data = {
       name: "Upgrade to Pro",
       url: "/prices",
       icon: Crown,
+      internal: true,
     },
     {
       name: "What's New",
       url: "/dashboard/settings/notifications",
       icon: Bell,
+      internal: true,
     },
     {
       name: "Privacy Policy",
       url: "/privacy?section=privacy",
       icon: FileText,
+      internal: true,
     },
     {
       name: "Help & Support",
       url: "/privacy?section=support",
       icon: HelpCircle,
+      internal: true,
     },
   ],
 };
