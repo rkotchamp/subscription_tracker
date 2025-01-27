@@ -13,3 +13,7 @@
 ### The manual upload will have grid layout stacked vertically on top of each other, the first one on top will be the upload invoice and the second will show all the list of Untracked subscriptions.The upload layout will have one column and two rows.
 
 <!-- ### The Untracked subscriptions in the manual upload page will have a table with the following columns: Date, Invoice Number, Amount, Status, Action. The table will have a search input and a filter dropdown to filter the data by date, invoice number, and status. The table will have a pagination component to navigate through the pages. -->
+
+<!-- Change the google Oauth before before entering Production -->
+
+### I will create a new project to configure the google oauth

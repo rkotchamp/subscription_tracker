@@ -55,7 +55,7 @@ export default function SignUpForm({ className, ...props }) {
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn("flex flex-col gap-6 w-full ", className)} {...props}>
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Create an account</CardTitle>
@@ -64,7 +64,7 @@ export default function SignUpForm({ className, ...props }) {
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)}>
             {error && (
-              <div className="mb-4 text-sm text-destructive">{error}</div>
+              <div className="mb-4 text-sm text-destructive ">{error}</div>
             )}
             <div className="grid gap-6">
               <div className="flex flex-col gap-4">
