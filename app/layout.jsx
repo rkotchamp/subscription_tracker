@@ -1,6 +1,6 @@
 import { Montserrat } from "next/font/google";
 import "./globals.css";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { Providers } from "./Providers/providers";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -14,9 +14,9 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={montserrat.className}>
-        <SidebarProvider>{children}</SidebarProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

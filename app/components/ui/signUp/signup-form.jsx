@@ -64,11 +64,23 @@ export default function SignUpForm({ className, ...props }) {
   const handleGoogleSignUp = async () => {
     try {
       setIsLoading(true);
-      await signIn("google", {
+      const result = await signIn("google", {
+        redirect: false,
         callbackUrl: "/dashboard",
       });
+
+      if (result?.error === "OAuthAccountNotLinked") {
+        // User exists, redirect to dashboard
+        router.push("/dashboard");
+        return;
+      }
+
+      if (result?.url) {
+        router.push(result.url);
+      }
     } catch (error) {
       console.error("Google sign up error:", error);
+      setError(error.message);
     } finally {
       setIsLoading(false);
     }

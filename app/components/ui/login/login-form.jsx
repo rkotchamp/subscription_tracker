@@ -64,15 +64,26 @@ export function LoginForm({ className, ...props }) {
     }
   };
 
-  // google sign in
+  // Simplified Google sign in
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
-      await signIn("google", {
+      const result = await signIn("google", {
+        redirect: false,
         callbackUrl: "/dashboard",
       });
+
+      if (result?.error === "OAuthAccountNotLinked") {
+        setError("Email already exists. Please sign in with your password.");
+        return;
+      }
+
+      if (result?.url) {
+        router.push(result.url);
+      }
     } catch (error) {
       console.error("Google sign in error:", error);
+      setError(error.message);
     } finally {
       setIsLoading(false);
     }

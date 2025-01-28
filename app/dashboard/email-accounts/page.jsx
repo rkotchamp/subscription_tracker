@@ -1,6 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { redirect } from "next/navigation";
+import { useGoogleApi } from "@/hooks/useGoogleApi";
+import { format } from "date-fns";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -26,9 +30,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Mail, MailPlus } from "lucide-react";
-import { format } from "date-fns";
 
 export default function EmailAccountsPage() {
+  const { data: session, status } = useSession();
+  const { initGmail, fetchAndParseEmails } = useGoogleApi();
   const [showProviders, setShowProviders] = useState(false);
   const [emailAccounts, setEmailAccounts] = useState([
     {
@@ -40,6 +45,39 @@ export default function EmailAccountsPage() {
     },
     // Add more mock data as needed
   ]);
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      redirect("/auth/login");
+    }
+  }, [status]);
+
+  useEffect(() => {
+    const initializeGmailApi = async () => {
+      if (status === "authenticated" && session) {
+        try {
+          setIsLoading(true);
+          await initGmail();
+          const parsedEmails = await fetchAndParseEmails();
+          setSubscriptions(parsedEmails);
+        } catch (err) {
+          console.error("Error initializing Gmail API:", err);
+          setError(err.message);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    initializeGmailApi();
+  }, [status, session]);
+
+  if (status === "loading") {
+    return <div>Loading session...</div>;
+  }
 
   const providers = [
     {
@@ -70,68 +108,72 @@ export default function EmailAccountsPage() {
         </div>
       </header>
       <div className="flex-1 p-4 space-y-4">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Email Accounts</h1>
-          <Button onClick={() => setShowProviders(true)}>Add New Email</Button>
-        </div>
+        {isLoading ? (
+          <div>Loading email data...</div>
+        ) : error ? (
+          <div className="text-red-500">Error: {error}</div>
+        ) : (
+          <>
+            <div className="flex justify-between items-center">
+              <h1 className="text-2xl font-bold">Email Accounts</h1>
+              <Button onClick={() => setShowProviders(true)}>
+                Add New Email
+              </Button>
+            </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Connected Email Accounts</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Email Address</TableHead>
-                  <TableHead>Provider</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Last Synced</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {emailAccounts.length > 0 ? (
-                  emailAccounts.map((account) => (
-                    <TableRow key={account.id}>
-                      <TableCell>{account.email}</TableCell>
-                      <TableCell>{account.provider}</TableCell>
-                      <TableCell>
-                        <span
-                          className={`px-2 py-1 rounded-full text-sm ${
-                            account.status === "active"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-yellow-100 text-yellow-800"
-                          }`}
-                        >
-                          {account.status}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        {format(new Date(account.lastSynced), "dd/MM/yyyy")}
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm">
-                          Manage
-                        </Button>
-                      </TableCell>
+            <Card>
+              <CardHeader>
+                <CardTitle>Connected Email Accounts</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Email Address</TableHead>
+                      <TableHead>Provider</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Last Synced</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="text-center text-muted-foreground"
-                    >
-                      No email accounts connected. Click "Add New Email" to get
-                      started.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {subscriptions.length > 0 ? (
+                      subscriptions.map((subscription) => (
+                        <TableRow key={subscription.messageId}>
+                          <TableCell>{subscription.from}</TableCell>
+                          <TableCell>Gmail</TableCell>
+                          <TableCell>
+                            <span className="px-2 py-1 rounded-full text-sm bg-green-100 text-green-800">
+                              Active
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            {format(new Date(subscription.date), "dd/MM/yyyy")}
+                          </TableCell>
+                          <TableCell>
+                            <Button variant="ghost" size="sm">
+                              Manage
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell
+                          colSpan={5}
+                          className="text-center text-muted-foreground"
+                        >
+                          No email accounts connected. Click "Add New Email" to
+                          get started.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
       <Dialog open={showProviders} onOpenChange={setShowProviders}>
