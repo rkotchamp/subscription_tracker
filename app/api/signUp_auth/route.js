@@ -25,14 +25,23 @@ export async function POST(request) {
 
     // Create new user following the schema
     const newUser = {
+      fullName: name,
       email,
       password: hashedPassword,
-      emailAccounts: [email], // Initial email account
       createdAt: new Date(),
     };
 
     // Insert the new user
     const result = await usersCollection.insertOne(newUser);
+
+    // Store email in connectedEmails collection
+    const connectedEmailsCollection = db.collection("connectedEmails");
+    await connectedEmailsCollection.insertOne({
+      id: result.insertedId.toString() + "_" + email,
+      userId: result.insertedId.toString(),
+      emailAddress: email,
+      isPrimary: true,
+    });
 
     // Create a log entry
     const logsCollection = db.collection("logs");

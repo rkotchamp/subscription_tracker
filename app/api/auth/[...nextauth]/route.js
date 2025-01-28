@@ -28,28 +28,47 @@ export const authOptions = {
           const client = await clientPromise;
           const db = client.db(process.env.MONGO_DB);
 
-          if (account.scope?.includes("gmail.readonly")) {
-            console.log("Gmail integration request detected");
-            await db.collection("connectedEmails").insertOne({
-              userId: user.id,
-              emailAddress: user.email,
-              isPrimary: false,
-              createdAt: new Date(),
-            });
-          }
-
           const existingUser = await db
             .collection("users")
             .findOne({ email: user.email });
 
           if (!existingUser) {
-            await db.collection("users").insertOne({
+            // Create new user
+            const result = await db.collection("users").insertOne({
+              fullName: user.name,
               email: user.email,
-              name: user.name,
               image: user.image,
               createdAt: new Date(),
             });
+
+            // Store as primary email in connectedEmails
+            await db.collection("connectedEmails").insertOne({
+              id: result.insertedId.toString() + "_" + user.email,
+              userId: result.insertedId.toString(),
+              emailAddress: user.email,
+              isPrimary: true,
+            });
           }
+
+          // If Gmail scope is present, add as additional email
+          if (account.scope?.includes("gmail.readonly") && existingUser) {
+            const existingEmail = await db
+              .collection("connectedEmails")
+              .findOne({
+                userId: existingUser._id.toString(),
+                emailAddress: user.email,
+              });
+
+            if (!existingEmail) {
+              await db.collection("connectedEmails").insertOne({
+                id: existingUser._id.toString() + "_" + user.email,
+                userId: existingUser._id.toString(),
+                emailAddress: user.email,
+                isPrimary: false,
+              });
+            }
+          }
+
           return true;
         } catch (error) {
           console.error("Database error:", error);

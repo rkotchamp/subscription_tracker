@@ -19,3 +19,5 @@
 <!-- Change the google Oauth before before entering Production -->
 
 ### I will create a new project to configure the google oauth
+
+### I will change the model from OpenAi to DeepSeek Reasoning
