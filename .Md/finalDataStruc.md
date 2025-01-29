@@ -42,6 +42,13 @@ Tracks email accounts linked to specific users.
   "id": "string",
   "userId": "string",
   "emailAddress": "string",
-  "isPrimary": "boolean"
+  "isPrimary": "boolean",
+  "accessToken": "string",
+  "createdAt": "timestamp",
+  "lastSynced": "timestamp",
+  "provider": "string",
+  "refreshToken": "string",
+  "scope": "string",
+  "status": "string"
 }
 ```

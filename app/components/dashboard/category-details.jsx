@@ -33,6 +33,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useEmailCategorization } from "@/hooks/useEmailCategorization";
 
 // Mock data for category expenses
 const getCategoryExpenses = (category) =>
@@ -108,13 +109,60 @@ export function CategoryDetails({ category, onBack }) {
   const [dateRange, setDateRange] = useState({ from: null, to: null });
   const [emailFilter, setEmailFilter] = useState("all");
   const [sortBy, setSortBy] = useState("default");
+  const [expenses, setExpenses] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { categorizeEmails, isProcessing } = useEmailCategorization();
 
   // Handle client-side only rendering
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const expenses = getCategoryExpenses(category);
+  useEffect(() => {
+    const fetchAndCategorizeEmails = async () => {
+      try {
+        setIsLoading(true);
+        console.log(
+          "CategoryDetails - Fetching emails for category:",
+          category.name
+        );
+
+        const response = await fetch(
+          `/api/emails/fetch?category=${encodeURIComponent(category.name)}`
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch emails: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log("CategoryDetails - Received emails:", data);
+
+        if (data.emails && data.emails.length > 0) {
+          // Categorize the emails
+          const categorizedEmails = await categorizeEmails(data.emails);
+          console.log(
+            "CategoryDetails - Categorized emails:",
+            categorizedEmails
+          );
+
+          // Get the expenses for this category
+          const categoryExpenses = categorizedEmails[category.name] || [];
+          setExpenses(categoryExpenses);
+        } else {
+          setExpenses([]);
+        }
+      } catch (error) {
+        console.error("Error fetching and categorizing emails:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (mounted && category) {
+      fetchAndCategorizeEmails();
+    }
+  }, [mounted, category]);
 
   // Filter and sort expenses
   const filteredExpenses = expenses
@@ -276,34 +324,42 @@ export function CategoryDetails({ category, onBack }) {
         </CardHeader>
 
         <CardContent className="h-full">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Statement</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredExpenses.map((expense, index) => (
-                <TableRow key={index}>
-                  <TableCell className="font-medium">{expense.name}</TableCell>
-                  <TableCell>
-                    {format(new Date(expense.date), "dd/MM/yyyy")}
-                  </TableCell>
-                  <TableCell>{expense.statement}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {expense.email}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    ${expense.amount.toFixed(2)}
-                  </TableCell>
+          {isLoading || isProcessing ? (
+            <div className="flex justify-center py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Statement</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredExpenses.map((expense, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="font-medium">
+                      {expense.name}
+                    </TableCell>
+                    <TableCell>
+                      {format(new Date(expense.date), "dd/MM/yyyy")}
+                    </TableCell>
+                    <TableCell>{expense.statement}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {expense.email}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      ${expense.amount.toFixed(2)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>
