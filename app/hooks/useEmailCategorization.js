@@ -12,16 +12,9 @@ export function useEmailCategorization() {
     setIsProcessing(true);
     setError(null);
 
-    console.log("Hook - Starting categorization for emails:", emails.length);
-
     try {
       const results = await Promise.all(
         emails.map(async (email) => {
-          console.log("Hook - Processing email:", {
-            subject: email.subject,
-            from: email.from,
-          });
-
           const response = await fetch("/api/emails/categorize", {
             method: "POST",
             headers: {
@@ -41,12 +34,9 @@ export function useEmailCategorization() {
           }
 
           const result = await response.json();
-          console.log("Hook - Categorization result:", result);
           return result;
         })
       );
-
-      console.log("Hook - All results:", results);
 
       // Group results by category
       const categorizedResults = results.reduce((acc, result) => {
@@ -67,10 +57,8 @@ export function useEmailCategorization() {
         return acc;
       }, {});
 
-      console.log("Hook - Categorized results:", categorizedResults);
       return categorizedResults;
     } catch (err) {
-      console.error("Hook - Error:", err);
       setError(err.message);
       throw err;
     } finally {

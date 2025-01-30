@@ -5,29 +5,21 @@ import { authOptions } from "@/lib/auth";
 
 export async function PATCH(request, { params }) {
   try {
-    const { emailId } = params;
+    // Await params before destructuring
+    const emailId = await params.emailId;
     const { status } = await request.json();
 
     const client = await clientPromise;
     const db = client.db(process.env.MONGO_DB);
 
-    await db.collection("connectedEmails").updateOne(
-      { id: emailId },
-      {
-        $set: {
-          status,
-          lastSynced: status === "active" ? new Date() : null,
-        },
-      }
-    );
+    const result = await db
+      .collection("connectedEmails")
+      .updateOne({ _id: emailId }, { $set: { status: status } });
 
-    return NextResponse.json({ success: true });
+    return Response.json({ success: true });
   } catch (error) {
     console.error("Error updating email status:", error);
-    return NextResponse.json(
-      { error: "Failed to update email status" },
-      { status: 500 }
-    );
+    return Response.json({ error: error.message }, { status: 500 });
   }
 }
 

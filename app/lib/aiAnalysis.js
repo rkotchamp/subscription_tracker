@@ -14,96 +14,106 @@ export async function analyzeEmail(emailContent) {
         {
           role: "system",
           content: `You are an AI assistant specialized in analyzing email content to detect subscription and recurring payment details. 
-          
-Your task is to extract relevant details, including:
-- **Service Name:** The company or platform providing the service.
-- **Subscription Status:** Whether the email mentions a recurring subscription or not.
-- **Billing Amount:** The amount being charged.
-- **Billing Frequency:** Monthly, yearly, quarterly, one-time, or unknown.
-- **Category:** The type of service (Software & SaaS, Media & Content, E-Commerce, IT Infrastructure, or Unknown).
 
-Use keywords such as **"monthly payment," "recurring charge," "subscription renewal,"** or similar terms to ensure accurate classification.
+PRIORITY CATEGORIZATION:
+1. First check if the email contains financial documents:
+- Invoice, receipt, billing statement
+- Payment confirmation
+- Subscription renewal notice
+- Purchase confirmation
+These should be analyzed for subscription details, NOT marked as advertisements.
 
-If no subscription-related details are found, classify it as "Unknown." Your response should be structured in JSON format.
-`,
+Only categorize as "Advertisement" if the email:
+- Is purely job-related (job alerts, recruitment)
+- Is purely marketing/promotional without any payment info
+- Contains only social media notifications
+- Is a newsletter without any billing/payment information
+
+For valid financial emails, extract:
+- Service Name: The company sending the invoice/receipt
+- Amount: The payment amount (required for invoices/receipts)
+- Billing Frequency: Check for recurring payment terms
+- Category based on the service type:
+  * Software & SaaS: Software services, digital tools
+  * Media & Content: Streaming, content subscriptions
+  * E-Commerce: Online shopping, retail
+  * IT Infrastructure: Hosting, domains
+  * Unknown: If service type is unclear`,
         },
         {
           role: "user",
-          content: `Analyze the following email and extract details related to subscriptions. Your response should include:
-- **Service Name**
-- **Subscription Status (true/false)**
-- **Billing Amount**
-- **Billing Frequency**
-- **Category**
-- **Confidence Score** (a number between 0-1 indicating the accuracy of the classification)
-
-If no subscription-related details are found, classify it as "Unknown."
-
-Email Content: ${emailContent}
-`,
+          content: `Analyze this email: ${emailContent}`,
         },
       ],
-      functions: [
+      tools: [
         {
-          name: "categorize_email",
-          parameters: {
-            type: "object",
-            properties: {
-              category: {
-                type: "string",
-                enum: [
-                  "Software & SaaS",
-                  "Media & Content",
-                  "E-Commerce",
-                  "IT Infrastructure",
-                  "Unknown",
-                ],
+          type: "function",
+          function: {
+            name: "categorize_email",
+            parameters: {
+              type: "object",
+              properties: {
+                category: {
+                  type: "string",
+                  enum: [
+                    "Software & SaaS",
+                    "Media & Content",
+                    "E-Commerce",
+                    "IT Infrastructure",
+                    "Unknown",
+                    "Advertisement",
+                  ],
+                },
+                isSubscription: { type: "boolean" },
+                amount: { type: "number" },
+                billingFrequency: {
+                  type: "string",
+                  enum: [
+                    "monthly",
+                    "yearly",
+                    "quarterly",
+                    "one-time",
+                    "unknown",
+                  ],
+                },
+                confidence: { type: "number" },
+                serviceName: { type: "string" },
               },
-              isSubscription: { type: "boolean" },
-              amount: { type: "number" },
-              billingFrequency: {
-                type: "string",
-                enum: ["monthly", "yearly", "quarterly", "one-time", "unknown"],
-              },
-              confidence: { type: "number" },
-              serviceName: { type: "string" },
+              required: ["category", "isSubscription", "confidence"],
             },
-            required: ["category", "isSubscription", "confidence"],
           },
         },
       ],
-      function_call: { name: "categorize_email" },
+      tool_choice: { type: "function", function: { name: "categorize_email" } },
     });
-
-    console.log("AI Analysis - Raw completion:", completion.choices[0]);
 
     let result;
     const message = completion.choices[0].message;
 
-    if (message.function_call?.arguments) {
-      // Parse from function_call arguments
+    if (message.tool_calls?.[0]?.function?.arguments) {
       try {
-        result = JSON.parse(message.function_call.arguments);
+        result = JSON.parse(message.tool_calls[0].function.arguments);
       } catch (parseError) {
         console.error(
           "AI Analysis - Failed to parse function arguments:",
           parseError
         );
-        result = extractJSONFromString(message.function_call.arguments);
+        result = extractJSONFromString(
+          message.tool_calls[0].function.arguments
+        );
       }
     } else if (message.content) {
-      // Try to extract JSON from content
       result = extractJSONFromString(message.content);
     }
 
-    // Validate and provide fallback
-    if (
-      !result ||
-      !result.category ||
-      !result.isSubscription ||
-      typeof result.confidence !== "number"
-    ) {
-      console.warn("AI Analysis - Invalid result format, using fallback");
+    // Skip advertisements and non-subscription content
+    if (result?.category === "Advertisement") {
+      console.log("AI Analysis - Skipping advertisement email");
+      return null;
+    }
+
+    // Validate and provide defaults for subscription emails
+    if (!result || typeof result !== "object") {
       result = {
         category: "Unknown",
         isSubscription: false,
@@ -111,7 +121,17 @@ Email Content: ${emailContent}
       };
     }
 
-    console.log("AI Analysis - Parsed result:", result);
+    result = {
+      category: result.category || "Unknown",
+      isSubscription: !!result.isSubscription,
+      confidence:
+        typeof result.confidence === "number" ? result.confidence : 0.5,
+      serviceName: result.serviceName || "Unknown",
+      amount: result.amount || 0,
+      billingFrequency: result.billingFrequency || "unknown",
+    };
+
+    console.log("AI Analysis - Final result:", result);
     return result;
   } catch (error) {
     console.error("AI Analysis Error:", error);

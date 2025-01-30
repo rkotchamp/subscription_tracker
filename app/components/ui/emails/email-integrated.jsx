@@ -46,13 +46,11 @@ export function EmailIntegration() {
 
   const fetchAndProcessEmails = async (emailAccount) => {
     if (!emailAccount || !emailAccount._id) {
-      console.log("No valid email account provided");
       return;
     }
 
     try {
       setIsFetching(true);
-      console.log("Fetching emails for account:", emailAccount._id);
 
       const response = await fetch(
         `/api/emails/fetch?emailId=${emailAccount._id}`,
@@ -67,11 +65,8 @@ export function EmailIntegration() {
       const data = await response.json();
 
       if (!response.ok) {
-        console.error("Fetch error:", data.error);
         throw new Error(data.error || "Failed to fetch emails");
       }
-
-      console.log("Emails fetched successfully:", data);
 
       // Refresh the connected emails list
       await refreshConnectedEmails();
@@ -84,12 +79,10 @@ export function EmailIntegration() {
 
   const refreshConnectedEmails = async () => {
     if (!session?.user?.id) {
-      console.log("No session or user ID available");
       return;
     }
 
     try {
-      console.log("Fetching emails for user:", session.user.id);
       const response = await fetch(
         `/api/connected-emails?userId=${session.user.id}`
       );
@@ -101,7 +94,6 @@ export function EmailIntegration() {
       }
 
       const data = await response.json();
-      console.log("Raw email data:", data);
 
       // Map the data to include isPrimary flag
       const emailsWithPrimary = data.map((email) => ({
@@ -110,7 +102,6 @@ export function EmailIntegration() {
         isPrimary: email.emailAddress === session.user.email,
       }));
 
-      console.log("Processed emails:", emailsWithPrimary);
       setConnectedEmails(emailsWithPrimary);
     } catch (error) {
       console.error("Error refreshing connected emails:", error);
@@ -122,11 +113,9 @@ export function EmailIntegration() {
     if (!session?.user?.id) return;
 
     try {
-      const response = await fetch(
+      await fetch(
         `/api/connected-emails?userId=${session.user.id}&checkState=true`
       );
-      const { stats } = await response.json();
-      console.log("Database state:", stats);
     } catch (error) {
       console.error("Error checking database state:", error);
     }
@@ -134,9 +123,6 @@ export function EmailIntegration() {
 
   // Initial fetch when session is ready
   useEffect(() => {
-    console.log("Session status:", status);
-    console.log("Current session:", session);
-
     if (status === "authenticated" && session?.user?.id) {
       checkDatabaseState(); // Check database state first
       refreshConnectedEmails();
@@ -148,7 +134,6 @@ export function EmailIntegration() {
     const handleSuccessfulConnection = async () => {
       const urlParams = new URLSearchParams(window.location.search);
       const isSuccess = urlParams.get("success") === "true";
-      console.log("Connection success status:", isSuccess);
 
       if (isSuccess && session?.user?.id) {
         await refreshConnectedEmails();
@@ -242,14 +227,12 @@ export function EmailIntegration() {
   const handleFetchEmails = async (emailId) => {
     try {
       setFetchingEmails((prev) => ({ ...prev, [emailId]: true }));
-      console.log("Fetching emails for:", emailId);
 
       const response = await fetch(`/api/emails/fetch?emailId=${emailId}`, {
         method: "POST",
       });
 
       const data = await response.json();
-      console.log("Received email data:", data); // Debug log
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to fetch emails");
@@ -258,7 +241,7 @@ export function EmailIntegration() {
       // Store the emails in state
       setEmailMessages((prev) => ({
         ...prev,
-        [emailId]: data.emails, // Make sure we're accessing the emails array from the response
+        [emailId]: data.emails,
       }));
 
       // Refresh the email list to update lastSynced

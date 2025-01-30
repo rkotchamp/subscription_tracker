@@ -48,7 +48,6 @@ export default function AccountSettings() {
   });
 
   const onSubmit = (data) => {
-    console.log(data);
     // Handle form submission
   };
 

@@ -10,7 +10,12 @@ import { CategoryDetails } from "@/components/dashboard/category-details";
 export function Overview() {
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [subscriptionData, setSubscriptionData] = useState(null);
+  const [subscriptionData, setSubscriptionData] = useState({
+    categories: [],
+    untracked: [],
+    upcoming: [],
+    total: 0,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [shouldRefresh, setShouldRefresh] = useState(true);
 
@@ -23,19 +28,69 @@ export function Overview() {
       }
       const data = await response.json();
 
+      // Filter out advertisements and null amounts
+      const validSubscriptions = data.filter(
+        (sub) =>
+          sub.category !== "Advertisement" &&
+          sub.amount !== null &&
+          sub.amount !== undefined &&
+          sub.status === "active" &&
+          sub.emailAccountTrackedFrom // Ensure we have the email source
+      );
+
+      // Calculate total subscription amount
+      const total = validSubscriptions.reduce(
+        (sum, sub) => sum + (Number(sub.amount) || 0),
+        0
+      );
+
+      // Group subscriptions by category
+      const groupedByCategory = validSubscriptions.reduce(
+        (acc, subscription) => {
+          const category = subscription.category || "Unknown";
+          if (!acc[category]) {
+            acc[category] = [];
+          }
+          acc[category].push(subscription);
+          return acc;
+        },
+        {}
+      );
+
       // Transform the data for the chart
       const transformedData = {
-        categories: Object.keys(data).map((category) => ({
-          name: category,
-          value: data[category].reduce((sum, item) => sum + item.amount, 0),
-        })),
-        untracked: data.untracked || [],
-        upcoming: data.upcoming || [],
+        categories: Object.entries(groupedByCategory).map(
+          ([category, items]) => ({
+            name: category,
+            value: items.reduce(
+              (sum, item) => sum + (Number(item.amount) || 0),
+              0
+            ),
+            items: items,
+          })
+        ),
+        untracked: data.filter((sub) => sub.status === "pending_review"),
+        upcoming: data.filter((sub) => {
+          if (!sub.renewalDate) return false;
+          const renewalDate = new Date(sub.renewalDate);
+          const today = new Date();
+          const thirtyDaysFromNow = new Date();
+          thirtyDaysFromNow.setDate(today.getDate() + 30);
+          return renewalDate >= today && renewalDate <= thirtyDaysFromNow;
+        }),
+        total,
       };
 
       setSubscriptionData(transformedData);
+      console.log("Transformed data:", transformedData);
     } catch (error) {
       console.error("Error fetching subscription data:", error);
+      setSubscriptionData({
+        categories: [],
+        untracked: [],
+        upcoming: [],
+        total: 0,
+      });
     } finally {
       setIsLoading(false);
       setShouldRefresh(false);
@@ -48,13 +103,11 @@ export function Overview() {
     }
   }, [shouldRefresh]);
 
-  // Only set up periodic refresh if path changes or new data is needed
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      setShouldRefresh(true);
-    }, 30000); // Check for updates every 30 seconds
-
-    return () => clearInterval(intervalId);
+    fetchSubscriptionData();
+    return () => {
+      setShouldRefresh(false);
+    };
   }, []);
 
   const handleCategoryClick = (category) => {
@@ -65,7 +118,7 @@ export function Overview() {
     router.push("/dashboard/subscriptions");
   };
 
-  if (isLoading && !subscriptionData) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center w-full h-full">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -87,15 +140,16 @@ export function Overview() {
           <>
             <div className="rounded-xl border bg-card text-card-foreground shadow">
               <SubscriptionChart
-                key={JSON.stringify(subscriptionData)} // Force re-render when data changes
                 data={subscriptionData}
                 onCategoryClick={handleCategoryClick}
                 onTotalClick={handleTotalClick}
               />
             </div>
             <div className="grid gap-4">
-              <UntrackedSubscriptions data={subscriptionData?.untracked} />
-              <UpcomingSubscriptions data={subscriptionData?.upcoming} />
+              <UntrackedSubscriptions
+                data={subscriptionData?.untracked || []}
+              />
+              <UpcomingSubscriptions data={subscriptionData?.upcoming || []} />
             </div>
           </>
         )}

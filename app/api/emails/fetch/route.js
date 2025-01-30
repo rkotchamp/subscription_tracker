@@ -10,14 +10,11 @@ export async function GET(request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
-      console.log("Fetch API - No session found");
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
-
-    console.log("Fetch API - Fetching emails for category:", category);
 
     // Get user's connected email accounts
     const client = await clientPromise;
@@ -27,8 +24,6 @@ export async function GET(request) {
       .collection("connectedEmails")
       .find({ userId: session.user.id })
       .toArray();
-
-    console.log("Fetch API - Found email accounts:", emailAccounts.length);
 
     let allEmails = [];
 
@@ -57,13 +52,6 @@ export async function GET(request) {
           maxResults: 100,
         });
 
-        console.log(
-          `Fetch API - Found ${
-            response.data.messages?.length || 0
-          } messages for account:`,
-          account.emailAddress
-        );
-
         if (response.data.messages) {
           const emailDetails = await Promise.all(
             response.data.messages.slice(0, 10).map(async (message) => {
@@ -89,15 +77,9 @@ export async function GET(request) {
           allEmails = [...allEmails, ...emailDetails];
         }
       } catch (gmailError) {
-        console.error(
-          "Fetch API - Gmail error for account:",
-          account.emailAddress,
-          gmailError
-        );
+        // Error handling without console.log
       }
     }
-
-    console.log("Fetch API - Returning emails:", allEmails.length);
 
     return Response.json({
       success: true,

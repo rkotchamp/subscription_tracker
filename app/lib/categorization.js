@@ -1,77 +1,67 @@
 import clientPromise from "@/lib/db/mongodb";
 import { analyzeEmail } from "./aiAnalysis";
+import { parseEmailContent } from "./emailParser";
 
 export async function categorizeEmail(email, userId, emailAccountTrackedFrom) {
   try {
     console.log("Categorization - Starting for email:", {
       subject: email.subject,
-      sender: email.sender,
-      userId
+      sender: email.from,
+      userId,
     });
 
     const client = await clientPromise;
     const db = client.db(process.env.MONGO_DB);
 
-    // Extract email content
-    const emailContent = {
-      subject: email.subject,
-      body: email.snippet, // Using snippet instead of body
-      sender: email.from,
-      date: email.date,
-    };
+    // Parse email content
+    const parsedContent = await parseEmailContent(email);
 
-    console.log("Categorization - Extracted content:", emailContent);
+    if (!parsedContent.isSubscription) {
+      return { tracked: false };
+    }
 
-    // Analyze with AI
-    const analysis = await analyzeEmail(JSON.stringify(emailContent));
-    console.log("Categorization - Raw AI analysis:", analysis);
+    // If manual access required, store as untracked
+    if (parsedContent.requiresManualAccess) {
+      const untracked = {
+        userId,
+        emailAccountTrackedFrom,
+        emailId: email.id,
+        content: parsedContent.content,
+        status: "pending_review",
+        createdAt: new Date(),
+      };
 
-    const parsedAnalysis = typeof analysis === "string" ? JSON.parse(analysis) : analysis;
-    console.log("Categorization - Parsed analysis:", parsedAnalysis);
+      await db.collection("untrackedEmails").insertOne(untracked);
+      return { tracked: false, requiresManualAccess: true };
+    }
 
-    // Determine if email should be tracked
-    const shouldTrack = parsedAnalysis.confidence > 0.8 && parsedAnalysis.isSubscription;
-    console.log("Categorization - Should track:", shouldTrack);
+    // Get AI analysis for valid subscription emails
+    const analysis = await analyzeEmail(parsedContent);
 
-    if (shouldTrack) {
+    // Store as subscription if we have valid data
+    if (analysis && parsedContent.amount) {
       const subscription = {
         userId,
         emailAccountTrackedFrom,
         emailId: email.id,
-        category: parsedAnalysis.category,
-        subscriptionName: parsedAnalysis.serviceName,
-        amount: parsedAnalysis.amount,
-        date: new Date(email.date),
-        statement: email.subject,
-        billingFrequency: parsedAnalysis.billingFrequency,
-        confidence: parsedAnalysis.confidence,
+        category: analysis.category,
+        subscriptionName: parsedContent.subscriptionName,
+        amount: parsedContent.amount,
+        date: parsedContent.date,
+        statement: parsedContent.statement,
+        billingFrequency: parsedContent.billingFrequency,
+        confidence: analysis.confidence,
         createdAt: new Date(),
         lastUpdated: new Date(),
         status: "active",
       };
 
-      console.log("Categorization - Inserting subscription:", subscription);
       await db.collection("subscriptions").insertOne(subscription);
-    } else {
-      const untracked = {
-        userId,
-        emailAccountTrackedFrom,
-        emailId: email.id,
-        content: emailContent,
-        analysis: parsedAnalysis,
-        status: "pending_review",
-        createdAt: new Date(),
-      };
-
-      console.log("Categorization - Inserting untracked email:", untracked);
-      await db.collection("untrackedEmails").insertOne(untracked);
+      console.log("Subscription inserted:", subscription);
+      return { tracked: true, analysis };
     }
 
-    return {
-      tracked: shouldTrack,
-      analysis: parsedAnalysis,
-      email: emailContent,
-    };
+    return { tracked: false };
   } catch (error) {
     console.error("Categorization Error:", error);
     throw error;

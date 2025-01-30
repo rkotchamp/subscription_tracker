@@ -35,75 +35,6 @@ import {
 import { cn } from "@/lib/utils";
 import { useEmailCategorization } from "@/hooks/useEmailCategorization";
 
-// Mock data for category expenses
-const getCategoryExpenses = (category) =>
-  ({
-    "Software & SaaS": [
-      {
-        name: "Adobe Creative Cloud",
-        date: "2024-02-15",
-        statement: "Annual Subscription Renewal",
-        email: "billing@adobe.com",
-        amount: 599.88,
-      },
-      {
-        name: "GitHub Team",
-        date: "2024-02-10",
-        statement: "Monthly Team License",
-        email: "billing@github.com",
-        amount: 44.0,
-      },
-    ],
-    "Media & Content": [
-      {
-        name: "Netflix Premium",
-        date: "2024-02-01",
-        statement: "Monthly Streaming Subscription",
-        email: "info@netflix.com",
-        amount: 19.99,
-      },
-      {
-        name: "Spotify Family",
-        date: "2024-02-05",
-        statement: "Monthly Family Plan",
-        email: "billing@spotify.com",
-        amount: 14.99,
-      },
-    ],
-    "E-Commerce": [
-      {
-        name: "Amazon Prime",
-        date: "2024-02-20",
-        statement: "Annual Membership Renewal",
-        email: "billing@amazon.com",
-        amount: 139.0,
-      },
-      {
-        name: "Shopify Basic",
-        date: "2024-02-15",
-        statement: "Monthly Store Subscription",
-        email: "billing@shopify.com",
-        amount: 29.0,
-      },
-    ],
-    "IT Infrastructure": [
-      {
-        name: "AWS Cloud Services",
-        date: "2024-02-28",
-        statement: "Monthly Cloud Computing Resources",
-        email: "billing@aws.amazon.com",
-        amount: 245.5,
-      },
-      {
-        name: "Digital Ocean",
-        date: "2024-02-25",
-        statement: "Monthly Server Hosting",
-        email: "billing@digitalocean.com",
-        amount: 40.0,
-      },
-    ],
-  }[category.name] || []);
-
 export function CategoryDetails({ category, onBack }) {
   const [mounted, setMounted] = useState(false);
   const [dateRange, setDateRange] = useState({ from: null, to: null });
@@ -113,54 +44,24 @@ export function CategoryDetails({ category, onBack }) {
   const [isLoading, setIsLoading] = useState(true);
   const { categorizeEmails, isProcessing } = useEmailCategorization();
 
-  // Handle client-side only rendering
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    const fetchAndCategorizeEmails = async () => {
-      try {
-        setIsLoading(true);
-        console.log(
-          "CategoryDetails - Fetching emails for category:",
-          category.name
-        );
-
-        const response = await fetch(
-          `/api/emails/fetch?category=${encodeURIComponent(category.name)}`
-        );
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch emails: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        console.log("CategoryDetails - Received emails:", data);
-
-        if (data.emails && data.emails.length > 0) {
-          // Categorize the emails
-          const categorizedEmails = await categorizeEmails(data.emails);
-          console.log(
-            "CategoryDetails - Categorized emails:",
-            categorizedEmails
-          );
-
-          // Get the expenses for this category
-          const categoryExpenses = categorizedEmails[category.name] || [];
-          setExpenses(categoryExpenses);
-        } else {
-          setExpenses([]);
-        }
-      } catch (error) {
-        console.error("Error fetching and categorizing emails:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     if (mounted && category) {
-      fetchAndCategorizeEmails();
+      // Transform the items from the category prop
+      const transformedExpenses = (category.items || []).map((subscription) => ({
+        name: subscription.subscriptionName || "Unknown Service",
+        date: subscription.date,
+        statement: subscription.statement || "-",
+        email: subscription.emailAccountTrackedFrom || "-",
+        amount: Number(subscription.amount) || 0,
+        billingFrequency: subscription.billingFrequency || "unknown",
+      }));
+
+      setExpenses(transformedExpenses);
+      setIsLoading(false);
     }
   }, [mounted, category]);
 
