@@ -317,3 +317,50 @@ function extractSubscriptionDetails(body, headers) {
     from: headers.from,
   };
 }
+
+function extractAmount(body) {
+  const amountPatterns = [
+    /\$\s*(\d+(?:\.\d{2})?)/, // $XX.XX
+    /USD\s*(\d+(?:\.\d{2})?)/, // USD XX.XX
+    /Total:\s*\$?\s*(\d+(?:\.\d{2})?)/i, // Total: $XX.XX
+    /Amount:\s*\$?\s*(\d+(?:\.\d{2})?)/i, // Amount: $XX.XX
+    /Price:\s*\$?\s*(\d+(?:\.\d{2})?)/i, // Price: $XX.XX
+    /Payment:\s*\$?\s*(\d+(?:\.\d{2})?)/i, // Payment: $XX.XX
+  ];
+
+  for (const pattern of amountPatterns) {
+    const match = body.match(pattern);
+    if (match && match[1]) {
+      return parseFloat(match[1]);
+    }
+  }
+  return null;
+}
+
+function extractSubscriptionName(body, fromHeader) {
+  // Extract company name from email header first
+  const fromName = fromHeader.match(/([^<]+)/)?.[1]?.trim() || "";
+  if (fromName && !fromName.includes("@")) {
+    return fromName;
+  }
+
+  // Fallback to domain name from email
+  const domain = fromHeader.match(/@([^>]+)/)?.[1]?.split(".")[0] || "Unknown";
+  return domain.charAt(0).toUpperCase() + domain.slice(1);
+}
+
+function detectBillingFrequency(body) {
+  const patterns = {
+    monthly: /monthly|per month|\/month|\bmo\b/i,
+    yearly: /yearly|annual|per year|\/year|\byr\b/i,
+    quarterly: /quarterly|every 3 months|per quarter/i,
+  };
+
+  for (const [frequency, pattern] of Object.entries(patterns)) {
+    if (pattern.test(body)) {
+      return frequency;
+    }
+  }
+
+  return "unknown";
+}

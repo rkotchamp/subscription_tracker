@@ -6,6 +6,9 @@ import { SubscriptionChart } from "@/components/ui/Chart/chart-pie-donut";
 import { UntrackedSubscriptions } from "@/components/ui/untrackedTable/untracked-subscriptions";
 import { UpcomingSubscriptions } from "@/components/ui/upcomingTable/upcoming-subscriptions";
 import { CategoryDetails } from "@/components/dashboard/category-details";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 export function Overview() {
   const router = useRouter();
@@ -18,6 +21,8 @@ export function Overview() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [shouldRefresh, setShouldRefresh] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const { toast } = useToast();
 
   const fetchSubscriptionData = async () => {
     try {
@@ -26,16 +31,16 @@ export function Overview() {
       if (!response.ok) {
         throw new Error("Failed to fetch subscription data");
       }
-      const data = await response.json();
+      const { subscriptions, untracked, upcoming } = await response.json();
 
       // Filter out advertisements and null amounts
-      const validSubscriptions = data.filter(
+      const validSubscriptions = subscriptions.filter(
         (sub) =>
           sub.category !== "Advertisement" &&
           sub.amount !== null &&
           sub.amount !== undefined &&
           sub.status === "active" &&
-          sub.emailAccountTrackedFrom // Ensure we have the email source
+          sub.emailAccountTrackedFrom
       );
 
       // Calculate total subscription amount
@@ -69,20 +74,13 @@ export function Overview() {
             items: items,
           })
         ),
-        untracked: data.filter((sub) => sub.status === "pending_review"),
-        upcoming: data.filter((sub) => {
-          if (!sub.renewalDate) return false;
-          const renewalDate = new Date(sub.renewalDate);
-          const today = new Date();
-          const thirtyDaysFromNow = new Date();
-          thirtyDaysFromNow.setDate(today.getDate() + 30);
-          return renewalDate >= today && renewalDate <= thirtyDaysFromNow;
-        }),
+        untracked: untracked || [],
+        upcoming: upcoming || [],
         total,
       };
 
-      setSubscriptionData(transformedData);
       console.log("Transformed data:", transformedData);
+      setSubscriptionData(transformedData);
     } catch (error) {
       console.error("Error fetching subscription data:", error);
       setSubscriptionData({
@@ -96,6 +94,60 @@ export function Overview() {
       setShouldRefresh(false);
     }
   };
+
+  const syncEmails = async () => {
+    try {
+      setIsSyncing(true);
+
+      const response = await fetch("/api/emails/sync", {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to sync emails");
+      }
+
+      const data = await response.json();
+
+      toast({
+        title: "Sync Complete",
+        description: `Processed ${data.processedEmails} emails`,
+      });
+
+      // Optionally refresh the page or update state
+      window.location.reload();
+    } catch (error) {
+      console.error("Sync error:", error);
+      toast({
+        title: "Sync Failed",
+        description: "Failed to sync emails. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  useEffect(() => {
+    const checkAndSync = async () => {
+      try {
+        const response = await fetch("/api/emails/connected");
+        if (!response.ok) {
+          throw new Error("Failed to check connected emails");
+        }
+
+        const { connectedEmails } = await response.json();
+
+        if (connectedEmails?.length > 0 && !isSyncing) {
+          await syncEmails();
+        }
+      } catch (error) {
+        console.error("Error checking connected emails:", error);
+      }
+    };
+
+    checkAndSync();
+  }, []);
 
   useEffect(() => {
     if (shouldRefresh) {
@@ -153,6 +205,22 @@ export function Overview() {
             </div>
           </>
         )}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Subscriptions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={syncEmails}
+              disabled={isSyncing}
+              className="w-full"
+            >
+              {isSyncing ? "Syncing..." : "Sync Emails"}
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

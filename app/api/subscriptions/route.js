@@ -1,41 +1,123 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import clientPromise from "@/lib/db/mongodb";
+import { fetchGmailMessages } from "@/lib/gmail/gmailApi";
+import { categorizeEmail } from "@/lib/categorization";
 
 export async function GET(request) {
+  try {
+    const client = await clientPromise;
+    const db = client.db(process.env.MONGO_DB);
+
+    // Get user ID from session
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = session.user.id;
+
+    // Get all active subscriptions for the user
+    const subscriptions = await db
+      .collection("subscriptions")
+      .find({
+        userId: userId,
+        status: "active",
+        amount: { $ne: null }, // Ensure amount exists
+        emailAccountTrackedFrom: { $ne: null }, // Ensure email source exists
+      })
+      .toArray();
+
+    // Get untracked emails
+    const untracked = await db
+      .collection("untrackedEmails")
+      .find({
+        userId: userId,
+        status: "pending_review",
+      })
+      .toArray();
+
+    // Get upcoming renewals
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
+    const upcoming = await db
+      .collection("subscriptions")
+      .find({
+        userId: userId,
+        status: "active",
+        renewalDate: {
+          $gte: new Date(),
+          $lte: thirtyDaysFromNow,
+        },
+      })
+      .toArray();
+
+    console.log("Fetched subscriptions:", {
+      subscriptionsCount: subscriptions.length,
+      untrackedCount: untracked.length,
+      upcomingCount: upcoming.length,
+    });
+
+    return Response.json({
+      subscriptions,
+      untracked,
+      upcoming,
+    });
+  } catch (error) {
+    console.error("Error fetching subscriptions:", error);
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function POST(request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const category = searchParams.get("category");
-
+    const userId = session.user.id;
     const client = await clientPromise;
     const db = client.db(process.env.MONGO_DB);
 
-    const query = {
-      userId: session.user.id,
-      ...(category && { category: category }),
-    };
-
-    const subscriptions = await db
-      .collection("subscriptions")
-      .find(query)
-      .sort({ date: -1 })
+    // Get all connected email accounts for the user
+    const connectedEmails = await db
+      .collection("connectedEmails")
+      .find({
+        userId: userId,
+        status: "active",
+      })
       .toArray();
 
-    return Response.json(subscriptions);
-  } catch (error) {
-    console.error("Subscriptions API Error:", error);
-    return Response.json(
-      { error: "Failed to fetch subscriptions" },
-      { status: 500 }
-    );
-  }
-}
+    if (!connectedEmails.length) {
+      return Response.json({ message: "No connected emails found" });
+    }
 
-export async function POST(request) {
-  return NextResponse.json({ message: "Subscription created" });
+    let processedEmails = 0;
+
+    // Process each connected email account
+    for (const emailAccount of connectedEmails) {
+      // Fetch emails from Gmail
+      const emails = await fetchGmailMessages(emailAccount.accessToken);
+
+      // Process each email
+      for (const email of emails) {
+        try {
+          await categorizeEmail(email, userId, emailAccount.email);
+          processedEmails++;
+        } catch (error) {
+          console.error(`Error processing email ${email.id}:`, error);
+        }
+      }
+    }
+
+    return Response.json({
+      success: true,
+      processedEmails,
+    });
+  } catch (error) {
+    console.error("Email sync error:", error);
+    return Response.json({ error: error.message }, { status: 500 });
+  }
 }

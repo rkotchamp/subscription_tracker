@@ -23,9 +23,6 @@ export const authOptions = {
       if (!user?.email) return false;
 
       try {
-        console.log("Sign in callback - User:", user);
-        console.log("Sign in callback - Account:", account);
-
         const client = await clientPromise;
         const db = client.db(process.env.MONGO_DB);
 
