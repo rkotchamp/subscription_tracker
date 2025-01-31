@@ -1,104 +1,45 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { SubscriptionChart } from "@/components/ui/Chart/chart-pie-donut";
-import { UntrackedSubscriptions } from "@/components/ui/untrackedTable/untracked-subscriptions";
-import { UpcomingSubscriptions } from "@/components/ui/upcomingTable/upcoming-subscriptions";
-import { CategoryDetails } from "@/components/dashboard/category-details";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { CategoryDetails } from "@/components/dashboard/category-details";
+import { UntrackedSubscriptions } from "@/components/ui/untrackedTable/untracked-subscriptions";
+import { UpcomingSubscriptions } from "@/components/ui/upcomingTable/upcoming-subscriptions";
+import { SubscriptionChart } from "@/components/ui/Chart/chart-pie-donut";
 
 export function Overview() {
-  const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [subscriptionData, setSubscriptionData] = useState({
+  const [data, setData] = useState({
     categories: [],
     untracked: [],
     upcoming: [],
     total: 0,
   });
-  const [isLoading, setIsLoading] = useState(true);
-  const [shouldRefresh, setShouldRefresh] = useState(true);
-  const [isSyncing, setIsSyncing] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    setMounted(true);
+    fetchSubscriptionData();
+  }, []);
 
   const fetchSubscriptionData = async () => {
     try {
-      setIsLoading(true);
-      const response = await fetch("/api/subscriptions");
-      if (!response.ok) {
-        throw new Error("Failed to fetch subscription data");
-      }
-      const { subscriptions, untracked, upcoming } = await response.json();
-
-      // Filter out advertisements and null amounts
-      const validSubscriptions = subscriptions.filter(
-        (sub) =>
-          sub.category !== "Advertisement" &&
-          sub.amount !== null &&
-          sub.amount !== undefined &&
-          sub.status === "active" &&
-          sub.emailAccountTrackedFrom
-      );
-
-      // Calculate total subscription amount
-      const total = validSubscriptions.reduce(
-        (sum, sub) => sum + (Number(sub.amount) || 0),
-        0
-      );
-
-      // Group subscriptions by category
-      const groupedByCategory = validSubscriptions.reduce(
-        (acc, subscription) => {
-          const category = subscription.category || "Unknown";
-          if (!acc[category]) {
-            acc[category] = [];
-          }
-          acc[category].push(subscription);
-          return acc;
-        },
-        {}
-      );
-
-      // Transform the data for the chart
-      const transformedData = {
-        categories: Object.entries(groupedByCategory).map(
-          ([category, items]) => ({
-            name: category,
-            value: items.reduce(
-              (sum, item) => sum + (Number(item.amount) || 0),
-              0
-            ),
-            items: items,
-          })
-        ),
-        untracked: untracked || [],
-        upcoming: upcoming || [],
-        total,
-      };
-
-      console.log("Transformed data:", transformedData);
-      setSubscriptionData(transformedData);
+      const response = await fetch("/api/subscriptions/stats");
+      if (!response.ok) throw new Error("Failed to fetch data");
+      const result = await response.json();
+      setData(result);
     } catch (error) {
-      console.error("Error fetching subscription data:", error);
-      setSubscriptionData({
-        categories: [],
-        untracked: [],
-        upcoming: [],
-        total: 0,
-      });
-    } finally {
-      setIsLoading(false);
-      setShouldRefresh(false);
+      console.error("Error fetching data:", error);
     }
   };
 
   const syncEmails = async () => {
     try {
       setIsSyncing(true);
-
       const response = await fetch("/api/emails/sync", {
         method: "POST",
       });
@@ -107,15 +48,13 @@ export function Overview() {
         throw new Error("Failed to sync emails");
       }
 
-      const data = await response.json();
-
+      const result = await response.json();
       toast({
         title: "Sync Complete",
-        description: `Processed ${data.processedEmails} emails`,
+        description: `Processed ${result.processedEmails} emails`,
       });
 
-      // Optionally refresh the page or update state
-      window.location.reload();
+      await fetchSubscriptionData();
     } catch (error) {
       console.error("Sync error:", error);
       toast({
@@ -128,100 +67,72 @@ export function Overview() {
     }
   };
 
-  useEffect(() => {
-    const checkAndSync = async () => {
-      try {
-        const response = await fetch("/api/emails/connected");
-        if (!response.ok) {
-          throw new Error("Failed to check connected emails");
-        }
-
-        const { connectedEmails } = await response.json();
-
-        if (connectedEmails?.length > 0 && !isSyncing) {
-          await syncEmails();
-        }
-      } catch (error) {
-        console.error("Error checking connected emails:", error);
-      }
-    };
-
-    checkAndSync();
-  }, []);
-
-  useEffect(() => {
-    if (shouldRefresh) {
-      fetchSubscriptionData();
-    }
-  }, [shouldRefresh]);
-
-  useEffect(() => {
-    fetchSubscriptionData();
-    return () => {
-      setShouldRefresh(false);
-    };
-  }, []);
-
   const handleCategoryClick = (category) => {
     setSelectedCategory(category);
   };
 
   const handleTotalClick = () => {
-    router.push("/dashboard/subscriptions");
+    setSelectedCategory({
+      name: "All Categories",
+      items: data.categories.flatMap((cat) => cat.items || []),
+    });
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center w-full h-full">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+  if (!mounted) {
+    return null;
   }
 
   return (
-    <div className="flex flex-col w-full pr-4">
-      <div className="grid gap-4 md:grid-cols-2 w-full">
-        {selectedCategory ? (
-          <div className="md:col-span-2 w-full">
-            <CategoryDetails
-              category={selectedCategory}
-              onBack={() => setSelectedCategory(null)}
-            />
+    <div className="space-y-4">
+      {selectedCategory ? (
+        <CategoryDetails
+          category={selectedCategory}
+          onBack={() => setSelectedCategory(null)}
+        />
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Left Column - Charts */}
+            <div className="space-y-4">
+              {/* Total Subscriptions Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Total Subscriptions</CardTitle>
+                  <div className="text-sm text-muted-foreground">
+                    Start tracking your subscriptions
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <SubscriptionChart
+                    data={data}
+                    onCategoryClick={handleCategoryClick}
+                    onTotalClick={handleTotalClick}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Right Column - Tables */}
+            <div className="space-y-4">
+              <UntrackedSubscriptions />
+              <UpcomingSubscriptions />
+            </div>
           </div>
-        ) : (
-          <>
-            <div className="rounded-xl border bg-card text-card-foreground shadow">
-              <SubscriptionChart
-                data={subscriptionData}
-                onCategoryClick={handleCategoryClick}
-                onTotalClick={handleTotalClick}
-              />
-            </div>
-            <div className="grid gap-4">
-              <UntrackedSubscriptions
-                data={subscriptionData?.untracked || []}
-              />
-              <UpcomingSubscriptions data={subscriptionData?.upcoming || []} />
-            </div>
-          </>
-        )}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Subscriptions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={syncEmails}
-              disabled={isSyncing}
-              className="w-full"
-            >
-              {isSyncing ? "Syncing..." : "Sync Emails"}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+
+          {/* Sync Button Card at Bottom */}
+          <Card>
+            <CardContent className="pt-6">
+              <Button
+                onClick={syncEmails}
+                disabled={isSyncing}
+                className="w-full"
+              >
+                {isSyncing ? "Syncing..." : "Sync Emails"}
+              </Button>
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   );
 }

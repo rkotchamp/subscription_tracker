@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { PieChart, Pie, Cell, Tooltip, Label } from "recharts";
 import {
   Card,
@@ -12,7 +11,6 @@ import {
 } from "@/components/ui/card";
 
 export function SubscriptionChart({ data, onCategoryClick, onTotalClick }) {
-  const router = useRouter();
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -27,107 +25,103 @@ export function SubscriptionChart({ data, onCategoryClick, onTotalClick }) {
     { name: "IT Infrastructure", value: 0, items: [] },
   ];
 
-  // Merge existing data with default categories
   const mergedCategories = React.useMemo(() => {
     if (!data?.categories || data.categories.length === 0) {
       return defaultCategories;
     }
 
-    // Create a map of existing categories
     const existingCategoriesMap = data.categories.reduce((acc, cat) => {
       acc[cat.name] = cat;
       return acc;
     }, {});
 
-    // Merge with defaults, keeping existing values where available
-    return defaultCategories.map(defaultCat => ({
+    return defaultCategories.map((defaultCat) => ({
       ...defaultCat,
       ...existingCategoriesMap[defaultCat.name],
     }));
   }, [data?.categories]);
 
-  if (!mounted) {
+  if (!mounted) return null;
+
+  const totalAmount = mergedCategories.reduce(
+    (sum, item) => sum + item.value,
+    0
+  );
+
+  // Custom tooltip content
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="bg-background border rounded-lg p-2 shadow-md">
+          <p className="font-medium">{data.name}</p>
+          <p className="text-sm text-muted-foreground">
+            ${data.value.toFixed(2)} (
+            {((data.value / totalAmount) * 100).toFixed(1)}%)
+          </p>
+        </div>
+      );
+    }
     return null;
-  }
-
-  const totalAmount = mergedCategories.reduce((sum, item) => sum + item.value, 0);
-
-  const miniChartData = mergedCategories.map((category) => ({
-    ...category,
-    percentage: totalAmount > 0 ? ((category.value / totalAmount) * 100).toFixed(1) : "0.0",
-    color: getCategoryColor(category.name),
-  }));
+  };
 
   return (
-    <div className="flex flex-col w-full">
-      <Card className="w-full mb-4">
-        <CardHeader>
-          <CardTitle>Total Subscriptions</CardTitle>
-          <CardDescription>
-            {totalAmount === 0 
-              ? "Start tracking your subscriptions"
-              : "Monthly subscription breakdown"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex justify-center">
-          <PieChart width={300} height={300} className="w-full max-w-[300px]">
-            <Pie
-              data={mergedCategories}
-              cx="50%"
-              cy="50%"
-              innerRadius={60}
-              outerRadius={80}
-              paddingAngle={5}
-              dataKey="value"
-              onClick={(_, __, e) => {
-                if (!e?.payload?.name) {
-                  onTotalClick();
-                }
-              }}
-              style={{ cursor: "pointer" }}
-            >
-              {mergedCategories.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={getCategoryColor(entry.name)}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onCategoryClick(entry);
-                  }}
-                />
-              ))}
-              <Label
-                content={({ viewBox: { cx, cy } }) => (
-                  <text
-                    x={cx}
-                    y={cy}
-                    fill="var(--foreground)"
-                    textAnchor="middle"
-                    dominantBaseline="central"
-                    className="cursor-pointer"
-                    onClick={onTotalClick}
-                  >
-                    <tspan x={cx} dy="-0.5em" fontSize="24" fontWeight="bold">
-                      ${totalAmount.toFixed(2)}
-                    </tspan>
-                    <tspan x={cx} dy="1.5em" fontSize="12">
-                      {totalAmount === 0 ? "No data yet" : "Total"}
-                    </tspan>
-                  </text>
-                )}
+    <div className="flex flex-col w-full items-center space-y-8">
+      {/* Main Total Donut Chart - Larger size */}
+      <div className="relative">
+        <PieChart width={400} height={400} className="w-full max-w-[400px]">
+          <Pie
+            data={mergedCategories}
+            cx="50%"
+            cy="50%"
+            innerRadius={80}
+            outerRadius={120}
+            paddingAngle={4}
+            dataKey="value"
+            onClick={onTotalClick}
+            style={{ cursor: "pointer" }}
+          >
+            {mergedCategories.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={getCategoryColor(entry.name)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCategoryClick(entry);
+                }}
               />
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        </CardContent>
-      </Card>
+            ))}
+            <Label
+              content={({ viewBox: { cx, cy } }) => (
+                <text
+                  x={cx}
+                  y={cy}
+                  fill="var(--foreground)"
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  className="cursor-pointer"
+                  onClick={onTotalClick}
+                >
+                  <tspan x={cx} dy="-0.5em" fontSize="32" fontWeight="bold">
+                    ${totalAmount.toFixed(2)}
+                  </tspan>
+                  <tspan x={cx} dy="1.5em" fontSize="16">
+                    {totalAmount === 0 ? "No data yet" : "Total"}
+                  </tspan>
+                </text>
+              )}
+            />
+          </Pie>
+          <Tooltip content={<CustomTooltip />} />
+        </PieChart>
+      </div>
 
-      {/* Mini Charts - Grid on desktop, stack on mobile */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {miniChartData.map((category) => (
+      {/* Mini Category Charts Grid */}
+      <div className="grid grid-cols-2 gap-4 w-full">
+        {mergedCategories.map((category) => (
           <Card
             key={category.name}
-            className="cursor-pointer transition-colors hover:bg-muted w-full"
+            className="cursor-pointer transition-colors hover:bg-muted"
             onClick={() => onCategoryClick(category)}
           >
             <CardHeader className="pb-2">
@@ -142,7 +136,11 @@ export function SubscriptionChart({ data, onCategoryClick, onTotalClick }) {
             </CardHeader>
             <CardContent>
               <div className="flex justify-center">
-                <PieChart width={100} height={100} className="w-full max-w-[100px]">
+                <PieChart
+                  width={100}
+                  height={100}
+                  className="w-full max-w-[100px]"
+                >
                   <Pie
                     data={[{ value: 100 }]}
                     cx="50%"
@@ -154,8 +152,18 @@ export function SubscriptionChart({ data, onCategoryClick, onTotalClick }) {
                   />
                   <Pie
                     data={[
-                      { value: parseFloat(category.percentage) },
-                      { value: 100 - parseFloat(category.percentage) },
+                      {
+                        value:
+                          category.value > 0
+                            ? (category.value / totalAmount) * 100
+                            : 0,
+                      },
+                      {
+                        value:
+                          category.value > 0
+                            ? 100 - (category.value / totalAmount) * 100
+                            : 100,
+                      },
                     ]}
                     cx="50%"
                     cy="50%"
@@ -165,7 +173,7 @@ export function SubscriptionChart({ data, onCategoryClick, onTotalClick }) {
                     endAngle={-270}
                     dataKey="value"
                   >
-                    <Cell fill={category.color} />
+                    <Cell fill={getCategoryColor(category.name)} />
                     <Cell fill="transparent" />
                     <Label
                       content={({ viewBox: { cx, cy } }) => (
