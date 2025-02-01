@@ -28,13 +28,42 @@ export function Overview() {
 
   const fetchSubscriptionData = async () => {
     try {
-      const response = await fetch("/api/subscriptions/stats");
+      const response = await fetch("/api/subscriptions");
       if (!response.ok) throw new Error("Failed to fetch data");
       const result = await response.json();
-      setData(result);
+
+      // Categorize subscriptions
+      const categorizedData = categorizeSubscriptions(result.subscriptions);
+      setData(categorizedData);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
+  };
+
+  const categorizeSubscriptions = (subscriptions) => {
+    const categories = {
+      "Software & SaaS": [],
+      "Media & Content": [],
+      "E-Commerce": [],
+      "IT Infrastructure": [],
+    };
+
+    subscriptions.forEach((sub) => {
+      if (categories[sub.category]) {
+        categories[sub.category].push(sub);
+      }
+    });
+
+    return {
+      categories: Object.entries(categories).map(([name, items]) => ({
+        name,
+        items,
+        value: items.reduce((sum, item) => sum + item.amount, 0), // Sum amounts for each category
+      })),
+      untracked: [], // Handle untracked subscriptions if needed
+      upcoming: [], // Handle upcoming subscriptions if needed
+      total: subscriptions.reduce((sum, sub) => sum + sub.amount, 0), // Total amount
+    };
   };
 
   const syncEmails = async () => {

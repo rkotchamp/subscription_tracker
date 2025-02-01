@@ -48,6 +48,13 @@ export function SubscriptionChart({ data, onCategoryClick, onTotalClick }) {
     0
   );
 
+  // Create data for the total subscription chart
+  const totalSubscriptionData = mergedCategories.map(category => ({
+    name: category.name,
+    value: category.value,
+    percentage: totalAmount > 0 ? (category.value / totalAmount) * 100 : 0
+  }));
+
   // Custom tooltip content
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
@@ -56,8 +63,7 @@ export function SubscriptionChart({ data, onCategoryClick, onTotalClick }) {
         <div className="bg-background border rounded-lg p-2 shadow-md">
           <p className="font-medium">{data.name}</p>
           <p className="text-sm text-muted-foreground">
-            ${data.value.toFixed(2)} (
-            {((data.value / totalAmount) * 100).toFixed(1)}%)
+            ${data.value.toFixed(2)} ({data.percentage.toFixed(1)}%)
           </p>
         </div>
       );
@@ -67,11 +73,11 @@ export function SubscriptionChart({ data, onCategoryClick, onTotalClick }) {
 
   return (
     <div className="flex flex-col w-full items-center space-y-8">
-      {/* Main Total Donut Chart - Larger size */}
+      {/* Total Subscription Chart */}
       <div className="relative">
         <PieChart width={400} height={400} className="w-full max-w-[400px]">
           <Pie
-            data={mergedCategories}
+            data={totalSubscriptionData}
             cx="50%"
             cy="50%"
             innerRadius={80}
@@ -81,13 +87,13 @@ export function SubscriptionChart({ data, onCategoryClick, onTotalClick }) {
             onClick={onTotalClick}
             style={{ cursor: "pointer" }}
           >
-            {mergedCategories.map((entry, index) => (
+            {totalSubscriptionData.map((entry, index) => (
               <Cell
                 key={`cell-${index}`}
                 fill={getCategoryColor(entry.name)}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onCategoryClick(entry);
+                  onCategoryClick(mergedCategories[index]);
                 }}
               />
             ))}
@@ -106,7 +112,7 @@ export function SubscriptionChart({ data, onCategoryClick, onTotalClick }) {
                     ${totalAmount.toFixed(2)}
                   </tspan>
                   <tspan x={cx} dy="1.5em" fontSize="16">
-                    {totalAmount === 0 ? "No data yet" : "Total"}
+                    Total
                   </tspan>
                 </text>
               )}
@@ -136,11 +142,7 @@ export function SubscriptionChart({ data, onCategoryClick, onTotalClick }) {
             </CardHeader>
             <CardContent>
               <div className="flex justify-center">
-                <PieChart
-                  width={100}
-                  height={100}
-                  className="w-full max-w-[100px]"
-                >
+                <PieChart width={100} height={100} className="w-full max-w-[100px]">
                   <Pie
                     data={[{ value: 100 }]}
                     cx="50%"
@@ -152,18 +154,8 @@ export function SubscriptionChart({ data, onCategoryClick, onTotalClick }) {
                   />
                   <Pie
                     data={[
-                      {
-                        value:
-                          category.value > 0
-                            ? (category.value / totalAmount) * 100
-                            : 0,
-                      },
-                      {
-                        value:
-                          category.value > 0
-                            ? 100 - (category.value / totalAmount) * 100
-                            : 100,
-                      },
+                      { value: category.value > 0 ? (category.value / totalAmount) * 100 : 0 },
+                      { value: category.value > 0 ? 100 - (category.value / totalAmount) * 100 : 100 },
                     ]}
                     cx="50%"
                     cy="50%"

@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -51,14 +51,16 @@ export function CategoryDetails({ category, onBack }) {
   useEffect(() => {
     if (mounted && category) {
       // Transform the items from the category prop
-      const transformedExpenses = (category.items || []).map((subscription) => ({
-        name: subscription.subscriptionName || "Unknown Service",
-        date: subscription.date,
-        statement: subscription.statement || "-",
-        email: subscription.emailAccountTrackedFrom || "-",
-        amount: Number(subscription.amount) || 0,
-        billingFrequency: subscription.billingFrequency || "unknown",
-      }));
+      const transformedExpenses = (category.items || []).map(
+        (subscription) => ({
+          name: subscription.subscriptionName || "Unknown Service",
+          date: subscription.date,
+          statement: subscription.statement || "-",
+          email: subscription.emailAccountTrackedFrom || "-",
+          amount: Number(subscription.amount) || 0,
+          billingFrequency: subscription.billingFrequency || "unknown",
+        })
+      );
 
       setExpenses(transformedExpenses);
       setIsLoading(false);
@@ -129,6 +131,12 @@ export function CategoryDetails({ category, onBack }) {
               <CardDescription>
                 Total: ${totalExpenses.toFixed(2)}
               </CardDescription>
+              {dateRange.from && dateRange.to && (
+                <CardDescription>
+                  Date Range: {format(dateRange.from, "LLL dd, y")} -{" "}
+                  {format(dateRange.to, "LLL dd, y")}
+                </CardDescription>
+              )}
             </div>
           </div>
 
@@ -195,19 +203,42 @@ export function CategoryDetails({ category, onBack }) {
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <CalendarComponent
-                  initialFocus
-                  mode="range"
-                  selected={{
-                    from: dateRange.from,
-                    to: dateRange.to,
-                  }}
-                  onSelect={setDateRange}
-                  numberOfMonths={2}
-                  disabled={(date) => date > today} // Disable future dates
-                  defaultMonth={today} // Set default month to current month
-                />
+              <PopoverContent
+                className="w-auto p-0"
+                align="start"
+                sideOffset={5}
+              >
+                <div className="flex flex-col space-y-4 p-3">
+                  <div className="space-y-2">
+                    <h4 className="font-medium leading-none">Date Range</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Pick a start and end date
+                    </p>
+                  </div>
+                  <div className="p-3 border rounded-md">
+                    <CalendarComponent
+                      initialFocus
+                      mode="range"
+                      selected={{
+                        from: dateRange.from,
+                        to: dateRange.to,
+                      }}
+                      onSelect={setDateRange}
+                      numberOfMonths={2}
+                      disabled={(date) => date > today}
+                      defaultMonth={today}
+                      className="flex space-x-8"
+                      classNames={{
+                        months: "flex space-x-8",
+                        nav: "space-x-1 flex items-center absolute right-1 left-1 top-1",
+                        nav_button_previous: "absolute left-0",
+                        nav_button_next: "absolute right-0",
+                        day_outside: "hidden",
+                        day_range_middle: "bg-accent/50",
+                      }}
+                    />
+                  </div>
+                </div>
               </PopoverContent>
             </Popover>
 
