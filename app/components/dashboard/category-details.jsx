@@ -1,8 +1,16 @@
 "use client";
 
-import { ArrowLeft, Calendar, Mail, DollarSign, RotateCcw } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  Mail,
+  DollarSign,
+  RotateCcw,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { useState, useEffect } from "react";
-import { format } from "date-fns";
+import { format, subMonths, addMonths } from "date-fns";
 import {
   Card,
   CardContent,
@@ -43,6 +51,7 @@ export function CategoryDetails({ category, onBack }) {
   const [expenses, setExpenses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const { categorizeEmails, isProcessing } = useEmailCategorization();
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
   useEffect(() => {
     setMounted(true);
@@ -184,7 +193,7 @@ export function CategoryDetails({ category, onBack }) {
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-[240px] justify-start text-left font-normal",
+                    "w-[240px] justify-start text-left font-normal ",
                     !dateRange.from && "text-muted-foreground"
                   )}
                 >
@@ -209,35 +218,27 @@ export function CategoryDetails({ category, onBack }) {
                 sideOffset={5}
               >
                 <div className="flex flex-col space-y-4 p-3">
-                  <div className="space-y-2">
-                    <h4 className="font-medium leading-none">Date Range</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Pick a start and end date
-                    </p>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h4 className="font-medium leading-none">Date Range</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Pick a start and end date
+                      </p>
+                    </div>
                   </div>
-                  <div className="p-3 border rounded-md">
-                    <CalendarComponent
-                      initialFocus
-                      mode="range"
-                      selected={{
-                        from: dateRange.from,
-                        to: dateRange.to,
-                      }}
-                      onSelect={setDateRange}
-                      numberOfMonths={2}
-                      disabled={(date) => date > today}
-                      defaultMonth={today}
-                      className="flex space-x-8"
-                      classNames={{
-                        months: "flex space-x-8",
-                        nav: "space-x-1 flex items-center absolute right-1 left-1 top-1",
-                        nav_button_previous: "absolute left-0",
-                        nav_button_next: "absolute right-0",
-                        day_outside: "hidden",
-                        day_range_middle: "bg-accent/50",
-                      }}
-                    />
-                  </div>
+                  <CalendarComponent
+                    initialFocus
+                    mode="range"
+                    selected={dateRange}
+                    onSelect={setDateRange}
+                    numberOfMonths={2}
+                    disabled={(date) => date > today}
+                    defaultMonth={currentMonth}
+                    components={{
+                      IconLeft: () => null,
+                      IconRight: () => null,
+                    }}
+                  />
                 </div>
               </PopoverContent>
             </Popover>
@@ -259,6 +260,24 @@ export function CategoryDetails({ category, onBack }) {
           {isLoading || isProcessing ? (
             <div className="flex justify-center py-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : filteredExpenses.length === 0 &&
+            dateRange.from &&
+            dateRange.to ? (
+            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+              <Calendar className="h-12 w-12 mb-4 opacity-50" />
+              <h3 className="font-medium mb-2">No Data Available</h3>
+              <p>No transactions found for the selected date range:</p>
+              <p className="text-sm">
+                {format(dateRange.from, "LLL dd, y")} -{" "}
+                {format(dateRange.to, "LLL dd, y")}
+              </p>
+            </div>
+          ) : filteredExpenses.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+              <Calendar className="h-12 w-12 mb-4 opacity-50" />
+              <h3 className="font-medium">No Data Available</h3>
+              <p>No transactions found with current filters</p>
             </div>
           ) : (
             <Table>
